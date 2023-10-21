@@ -1,6 +1,7 @@
 package com.charlesxvr.portfoliobackend.security.models;
 
 import com.charlesxvr.portfoliobackend.security.enums.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Data
 public class User implements UserDetails {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) @JsonIgnore
     private Long id;
     private String firstName;
     private String lastName;
@@ -34,6 +35,7 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = role.getPermissions().stream()
@@ -43,22 +45,22 @@ public class User implements UserDetails {
         return authorities;
     }
 
-    @Override
+    @Override @JsonIgnore
     public boolean isAccountNonExpired() {
         return true;
     }
 
-    @Override
+    @Override @JsonIgnore
     public boolean isAccountNonLocked() {
         return true;
     }
 
-    @Override
+    @Override @JsonIgnore
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
-    @Override
+    @Override @JsonIgnore
     public boolean isEnabled() {
         return true;
     }
