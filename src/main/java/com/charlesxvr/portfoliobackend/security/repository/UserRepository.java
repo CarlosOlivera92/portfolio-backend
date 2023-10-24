@@ -1,6 +1,6 @@
 package com.charlesxvr.portfoliobackend.security.repository;
 
-import com.charlesxvr.portfoliobackend.security.models.User;
+import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

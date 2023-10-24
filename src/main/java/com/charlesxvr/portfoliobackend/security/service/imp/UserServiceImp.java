@@ -1,8 +1,8 @@
 package com.charlesxvr.portfoliobackend.security.service.imp;
 
 import com.charlesxvr.portfoliobackend.exceptions.UsernameAlreadyExistsException;
-import com.charlesxvr.portfoliobackend.security.models.Token;
-import com.charlesxvr.portfoliobackend.security.models.User;
+import com.charlesxvr.portfoliobackend.security.models.entities.Token;
+import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.security.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

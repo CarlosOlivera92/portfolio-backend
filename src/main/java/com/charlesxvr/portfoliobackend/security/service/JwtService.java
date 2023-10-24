@@ -1,7 +1,7 @@
 package com.charlesxvr.portfoliobackend.security.service;
 
-import com.charlesxvr.portfoliobackend.security.models.Token;
-import com.charlesxvr.portfoliobackend.security.models.User;
+import com.charlesxvr.portfoliobackend.security.models.entities.Token;
+import com.charlesxvr.portfoliobackend.security.models.entities.User;
 
 import java.util.Map;
 

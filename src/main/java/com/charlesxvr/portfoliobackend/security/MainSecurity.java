@@ -41,7 +41,7 @@ public class MainSecurity {
     private static Customizer<AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry> builderRequestMatchers() {
         return authConfig -> {
 
-            authConfig.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll();
+            authConfig.requestMatchers(HttpMethod.POST, "/api/auth/signin").permitAll();
             authConfig.requestMatchers(HttpMethod.POST, "/api/auth").permitAll();
 
             authConfig.requestMatchers(HttpMethod.GET, "/api/auth").permitAll();

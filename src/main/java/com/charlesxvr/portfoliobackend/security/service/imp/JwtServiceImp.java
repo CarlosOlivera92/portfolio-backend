@@ -1,7 +1,7 @@
 package com.charlesxvr.portfoliobackend.security.service.imp;
 
-import com.charlesxvr.portfoliobackend.security.models.Token;
-import com.charlesxvr.portfoliobackend.security.models.User;
+import com.charlesxvr.portfoliobackend.security.models.entities.Token;
+import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.repository.TokenRepository;
 import com.charlesxvr.portfoliobackend.security.service.JwtService;
 import io.jsonwebtoken.Header;
@@ -9,7 +9,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.aspectj.weaver.ast.Var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -43,6 +42,7 @@ public class JwtServiceImp implements JwtService {
         token.setToken(jwts);
         token.setCreatedDate(issuedAt);
         token.setUser(user);
+
         return token;
     }
 

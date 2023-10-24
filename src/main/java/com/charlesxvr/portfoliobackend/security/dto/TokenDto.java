@@ -1,6 +1,6 @@
 package com.charlesxvr.portfoliobackend.security.dto;
 
-import com.charlesxvr.portfoliobackend.security.models.Token;
+import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import lombok.Data;
 
 import java.util.Date;

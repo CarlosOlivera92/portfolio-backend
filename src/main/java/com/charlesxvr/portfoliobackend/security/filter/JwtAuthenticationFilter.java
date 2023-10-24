@@ -1,6 +1,6 @@
 package com.charlesxvr.portfoliobackend.security.filter;
 
-import com.charlesxvr.portfoliobackend.security.models.User;
+import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.service.imp.JwtServiceImp;
 import com.charlesxvr.portfoliobackend.security.service.imp.UserServiceImp;
 import jakarta.servlet.FilterChain;
@@ -16,7 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class    JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private UserServiceImp userServiceImp;
