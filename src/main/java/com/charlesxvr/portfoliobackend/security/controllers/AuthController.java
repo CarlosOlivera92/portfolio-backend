@@ -3,12 +3,17 @@ package com.charlesxvr.portfoliobackend.security.controllers;
 
 import com.charlesxvr.portfoliobackend.security.dto.AuthenticationRequest;
 import com.charlesxvr.portfoliobackend.security.dto.AuthenticationResponse;
+import com.charlesxvr.portfoliobackend.security.dto.UserDto;
+import com.charlesxvr.portfoliobackend.security.models.Token;
 import com.charlesxvr.portfoliobackend.security.models.User;
 import com.charlesxvr.portfoliobackend.security.service.imp.AuthenticationServiceImp;
+import com.charlesxvr.portfoliobackend.security.service.imp.JwtServiceImp;
 import com.charlesxvr.portfoliobackend.security.service.imp.UserServiceImp;
+import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +28,8 @@ public class AuthController {
     @Autowired
     private UserServiceImp userServiceImp;
     @Autowired
+    private JwtServiceImp jwtServiceImp;
+    @Autowired
     private AuthenticationServiceImp authenticationServiceImp;
 
     @Autowired
@@ -32,17 +39,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login
             (@RequestBody @Valid AuthenticationRequest authRequest) {
-        System.out.println("Diezpeso");
-
         AuthenticationResponse jwtDto = authenticationServiceImp.login(authRequest);
         return ResponseEntity.ok(jwtDto);
     }
     @PreAuthorize("permitAll")
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody @Valid User user) {
+    public ResponseEntity<UserDto> createUser(@RequestBody @Valid User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                this.userServiceImp.newUser(user)
-        );
+        Token token = this.jwtServiceImp.generateToken(user, authenticationServiceImp.generateExtraClaims(user));
+        this.userServiceImp.newUser(user, token);
+        UserDto userResponse = new UserDto(user);
+
+        return ResponseEntity.ok(userResponse);
     }
 }

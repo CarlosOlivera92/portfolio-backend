@@ -2,6 +2,7 @@ package com.charlesxvr.portfoliobackend.security.service.imp;
 
 import com.charlesxvr.portfoliobackend.security.dto.AuthenticationRequest;
 import com.charlesxvr.portfoliobackend.security.dto.AuthenticationResponse;
+import com.charlesxvr.portfoliobackend.security.models.Token;
 import com.charlesxvr.portfoliobackend.security.models.User;
 import com.charlesxvr.portfoliobackend.security.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +25,10 @@ public class AuthenticationServiceImp implements AuthenticationService {
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword());
         authenticationManager.authenticate(authToken);
         User user = userServiceImp.findByUsername(authenticationRequest.getUsername()).get();
-        String jwt = jwtServiceImp.generateToken(user, generateExtraClaims(user));
-        return new AuthenticationResponse(jwt);
+        Token jwt = jwtServiceImp.generateToken(user, generateExtraClaims(user));
+        return new AuthenticationResponse(jwt.getToken());
     }
-    private Map<String, Object> generateExtraClaims(User user) {
+    public Map<String, Object> generateExtraClaims(User user) {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("name", user.getFirstName());
         extraClaims.put("role", user.getRole());

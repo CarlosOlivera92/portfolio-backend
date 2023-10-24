@@ -1,6 +1,7 @@
 package com.charlesxvr.portfoliobackend.security.service.imp;
 
 import com.charlesxvr.portfoliobackend.exceptions.UsernameAlreadyExistsException;
+import com.charlesxvr.portfoliobackend.security.models.Token;
 import com.charlesxvr.portfoliobackend.security.models.User;
 import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.security.service.UserService;
@@ -27,7 +28,8 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public User newUser(User user) {
+    public User newUser(User user, Token token) {
+        user.setToken(token);
         if (isUsernameTaken(user.getUsername())) {
             throw new UsernameAlreadyExistsException("The username is already in use");
         }
