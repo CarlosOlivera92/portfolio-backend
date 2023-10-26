@@ -1,14 +1,19 @@
 package com.charlesxvr.portfoliobackend.security.controllers;
 
 
+import com.charlesxvr.portfoliobackend.exceptions.TokenRefreshException;
 import com.charlesxvr.portfoliobackend.security.dto.AuthenticationRequest;
 import com.charlesxvr.portfoliobackend.security.dto.AuthenticationResponse;
 import com.charlesxvr.portfoliobackend.security.dto.UserDto;
 import com.charlesxvr.portfoliobackend.security.models.JwtResponse;
+import com.charlesxvr.portfoliobackend.security.models.TokenRefreshRequest;
+import com.charlesxvr.portfoliobackend.security.models.TokenRefreshResponse;
+import com.charlesxvr.portfoliobackend.security.models.entities.RefreshToken;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.service.imp.AuthenticationServiceImp;
 import com.charlesxvr.portfoliobackend.security.service.imp.JwtServiceImp;
+import com.charlesxvr.portfoliobackend.security.service.imp.RefreshTokenServiceImp;
 import com.charlesxvr.portfoliobackend.security.service.imp.UserServiceImp;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +36,8 @@ public class AuthController {
     private JwtServiceImp jwtServiceImp;
     @Autowired
     private AuthenticationServiceImp authenticationServiceImp;
+    @Autowired
+    private RefreshTokenServiceImp refreshTokenServiceImp;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -51,5 +58,17 @@ public class AuthController {
         UserDto userResponse = new UserDto(user);
 
         return ResponseEntity.ok(userResponse);
+    }
+    @PreAuthorize("permitAll")
+    @PostMapping("/refreshtoken")
+    public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequest request){
+        String requestRefreshToken = request.getRefreshToken();
+        return refreshTokenServiceImp.findByToken(requestRefreshToken)
+                .map(refreshTokenServiceImp::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    Token token = jwtServiceImp.generateToken(user, authenticationServiceImp.generateExtraClaims(user));
+                    return ResponseEntity.ok(new TokenRefreshResponse(token.getToken(), requestRefreshToken));
+                }).orElseThrow( ()  -> new TokenRefreshException(requestRefreshToken, "Refresh token not in database"));
     }
 }
