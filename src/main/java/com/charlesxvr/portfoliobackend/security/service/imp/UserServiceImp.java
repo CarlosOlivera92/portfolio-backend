@@ -8,11 +8,16 @@ import com.charlesxvr.portfoliobackend.security.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserServiceImp implements UserService {
+    private static final long EXPIRE_TOKEN_AFTER_MINUTES = 30;
 
     @Autowired
     private UserRepository userRepository;
@@ -26,6 +31,7 @@ public class UserServiceImp implements UserService {
     public User getUserById(Long id) {
         return this.userRepository.findById(id).orElse(null);
     }
+
 
     @Override
     public User newUser(User user, Token token) {
@@ -65,6 +71,60 @@ public class UserServiceImp implements UserService {
         return this.userRepository.findByUsername(username);
     }
 
+    @Override
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @Override
+    public Optional<User> findByResetPasswordToken(String token) {
+        return userRepository.findByResetPasswordToken(token);
+    }
+
+    @Override
+    public String forgotPassword(String email) {
+
+        User user = findByEmail(email);
+        System.out.println(user);
+        if (user == null) {
+            return "Invalid email";
+        }
+        user.setResetPasswordToken(createToken());
+        user.setTokenCreationDate(LocalDateTime.now());
+        userRepository.save(user);
+        return user.getResetPasswordToken();
+    }
+
+    @Override
+    public String resetPassword(String token, String password) {
+        Optional<User> userOptional = userRepository.findByResetPasswordToken(token);
+        if (!userOptional.isPresent()) {
+            return "Invalid token.";
+        }
+        LocalDateTime tokenCreationDate = userOptional.get().getTokenCreationDate();
+
+        if(isTokenExpired(tokenCreationDate)) {
+            return "token expired";
+        }
+        User user = userOptional.get();
+        user.setPassword(password);
+        user.setResetPasswordToken(null);
+        user.setTokenCreationDate(null);
+        userRepository.save(user);
+        return "Your password successfully updated.";
+    }
+
+    @Override
+    public boolean isTokenExpired(LocalDateTime tokenCreationDate) {
+        LocalDateTime now = LocalDateTime.now();
+        Duration diff = Duration.between(tokenCreationDate, now);
+
+        return diff.toMinutes() >= EXPIRE_TOKEN_AFTER_MINUTES;
+    }
+    private String createToken() {
+        String token = UUID.randomUUID().toString();
+        return token;
+    }
     @Override
     public void deleteUser(Long id) {
         this.userRepository.deleteById(id);

@@ -46,8 +46,6 @@ public class JwtServiceImp implements JwtService {
         return token;
     }
 
-
-
     private Key generateKey() {
 
         byte[] secret = Decoders.BASE64.decode(SECRET_KEY);

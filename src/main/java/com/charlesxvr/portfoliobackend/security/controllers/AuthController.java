@@ -1,10 +1,6 @@
 package com.charlesxvr.portfoliobackend.security.controllers;
-
-
 import com.charlesxvr.portfoliobackend.exceptions.TokenRefreshException;
-import com.charlesxvr.portfoliobackend.security.dto.AuthenticationRequest;
-import com.charlesxvr.portfoliobackend.security.dto.AuthenticationResponse;
-import com.charlesxvr.portfoliobackend.security.dto.UserDto;
+import com.charlesxvr.portfoliobackend.security.dto.*;
 import com.charlesxvr.portfoliobackend.security.models.JwtResponse;
 import com.charlesxvr.portfoliobackend.security.models.TokenRefreshRequest;
 import com.charlesxvr.portfoliobackend.security.models.TokenRefreshResponse;
@@ -20,10 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -41,7 +34,22 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
+    @PreAuthorize("permitAll")
+    @PostMapping("/forgotpassword")
+    public String forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        System.out.println(request.getEmail());
+        String response = userServiceImp.forgotPassword(request.getEmail());
+        if (!response.startsWith("Invalid")) {
+            response = "http://localhost:8080/reset-password?token=" + response;
+        }
+        return response;
+    }
+    @PutMapping("/reset-password")
+    public String resetPassword(@RequestParam String token,
+                                @RequestBody ResetPasswordRequest newPassword) {
+        String encodedPassword = passwordEncoder.encode(newPassword.getNewPassword());
+        return userServiceImp.resetPassword(token, encodedPassword);
+    }
     @PreAuthorize("permitAll")
     @PostMapping("/signin")
     public ResponseEntity<?> login

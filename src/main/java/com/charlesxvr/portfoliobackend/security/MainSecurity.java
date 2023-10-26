@@ -42,6 +42,8 @@ public class MainSecurity {
         return authConfig -> {
 
             authConfig.requestMatchers(HttpMethod.POST, "/api/auth/signin").permitAll();
+            authConfig.requestMatchers(HttpMethod.POST, "/api/auth/forgotpassword").permitAll();
+
             authConfig.requestMatchers(HttpMethod.POST, "/api/auth").permitAll();
 
             authConfig.requestMatchers(HttpMethod.GET, "/api/auth").permitAll();
