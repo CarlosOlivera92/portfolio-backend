@@ -2,6 +2,7 @@ package com.charlesxvr.portfoliobackend.security.models.entities;
 
 import com.charlesxvr.portfoliobackend.security.enums.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -26,7 +27,9 @@ public class User implements UserDetails {
     private Long id;
     private String firstName;
     private String lastName;
+    @Nullable
     private String profilePicUrl;
+    @Nullable
     private String aboutMe;
     private String email;
     private BigInteger phoneNumber;
@@ -34,6 +37,7 @@ public class User implements UserDetails {
     private String username;
     private String password;
     private String resetPasswordToken;
+
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime tokenCreationDate;
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

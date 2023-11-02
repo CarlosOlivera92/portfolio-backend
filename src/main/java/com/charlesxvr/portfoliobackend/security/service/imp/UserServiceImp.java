@@ -32,6 +32,7 @@ public class UserServiceImp implements UserService {
     }
 
 
+
     @Override
     public User newUser(User user, Token token) {
         user.setToken(token);

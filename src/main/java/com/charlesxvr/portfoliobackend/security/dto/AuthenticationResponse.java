@@ -12,4 +12,5 @@ public class AuthenticationResponse
     private String jwt;
     private String refreshToken;
     private User user;
+
 }
