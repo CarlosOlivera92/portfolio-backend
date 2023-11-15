@@ -1,14 +1,18 @@
 package com.charlesxvr.portfoliobackend.security.service.imp;
 
+import com.charlesxvr.portfoliobackend.security.dto.InvalidateTokenResult;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.repository.TokenRepository;
+import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.security.service.JwtService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -20,6 +24,8 @@ import java.util.Optional;
 public class JwtServiceImp implements JwtService {
     @Autowired
     private TokenRepository tokenRepository;
+    @Autowired
+    private UserRepository userRepository;
     @Value("${security.jwt.expiration-minutes}")
     private Long EXPIRATION_MINUTES;
     @Value("${security.jwt.secret}")
@@ -50,9 +56,14 @@ public class JwtServiceImp implements JwtService {
         Token token = new Token();
         token.setToken(jwts);
         token.setCreatedDate(issuedAt);
+        token.setExpiryDate(expiration);
         token.setUser(user);
-
         return token;
+    }
+
+    @Override
+    public Token saveToken(Token token) {
+        return this.tokenRepository.save(token);
     }
 
     private Key generateKey() {
@@ -65,28 +76,54 @@ public class JwtServiceImp implements JwtService {
         try {
             Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
 
-            // Parsea el token y verifica la firma
+            //Parse token and verify the sign
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
 
-            // Comprueba si el token ha expirado
+            // Check if the token is expired
             Date expirationDate = claims.getExpiration();
             Date now = new Date();
-            // El token ha expirado
+            // Token expired
             return !expirationDate.before(now);
 
         } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException | SignatureException | IllegalArgumentException e) {
-            // Manejar excepciones relacionadas con el token JWT
-            return false; // El token no es válido
+            return false;
         }
     }
     public String extractUsername(String jwt) {
         return extractAllClaims(jwt).getSubject();
     }
+    @Transactional
+    public InvalidateTokenResult invalidateToken(String jwtToken) {
+        try {
+            String token = jwtToken.replace("Bearer ", "");
+            String username = extractUsername(token);
 
+            Optional<User> userOptional = userRepository.findByUsername(username);
+
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+
+                Token tokenResponseBdd = tokenRepository.findByUser_Id(user.getId());
+
+                if (tokenResponseBdd != null) {
+                    tokenRepository.deleteById(tokenResponseBdd.getId());
+                    return new InvalidateTokenResult(true, "Token deleted successfully.");
+                } else {
+                    return new InvalidateTokenResult(false, "Token not found for the user");
+                }
+            } else {
+                return new InvalidateTokenResult(false, "User not found");
+            }
+        } catch (EmptyResultDataAccessException ex) {
+            return new InvalidateTokenResult(false, "No results found for token deletion.");
+        } catch (Exception ex) {
+            return new InvalidateTokenResult(false, "An error occurred during token deletion: " + ex.getMessage());
+        }
+    }
     public Claims extractAllClaims(String jwt) {
         return Jwts.parserBuilder().setSigningKey(generateKey()).build()
                 .parseClaimsJws(jwt).getBody();

@@ -9,4 +9,11 @@ import java.util.Optional;
 @Repository
 public interface TokenRepository extends JpaRepository<Token, Long> {
     Optional<Token> findByUserId(Long userId);
+
+    long deleteByToken(String token);
+
+    Token findByToken(String token);
+
+    Token findByUser_Id(Long id);
+
 }

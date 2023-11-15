@@ -1,13 +1,19 @@
 package com.charlesxvr.portfoliobackend.security.service.imp;
 
 import com.charlesxvr.portfoliobackend.exceptions.UsernameAlreadyExistsException;
+import com.charlesxvr.portfoliobackend.javamail.EmailSender;
+import com.charlesxvr.portfoliobackend.security.dto.apiResponseDto;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
+import com.charlesxvr.portfoliobackend.security.repository.TokenRepository;
 import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.security.service.UserService;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,6 +26,8 @@ public class UserServiceImp implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private TokenRepository tokenRepository;
 
     @Override
     public List<User> getUsers() {
@@ -30,18 +38,19 @@ public class UserServiceImp implements UserService {
     public User getUserById(Long id) {
         return this.userRepository.findById(id).orElse(null);
     }
+    JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
 
+    EmailSender emailSender = new EmailSender(mailSender);
 
 
     @Override
-    public User newUser(User user, Token token) {
-        user.setToken(token);
+    public User newUser(User user) {
         if (isUsernameTaken(user.getUsername())) {
             throw new UsernameAlreadyExistsException("The username is already in use");
         }
         return this.userRepository.save(user);
     }
-    private boolean isUsernameTaken(String username) {
+    public boolean isUsernameTaken(String username) {
         // Verificar si el nombre de usuario ya existe en la base de datos
         User existingUser = userRepository.findByUsername(username).orElse(null);
         return existingUser != null;
@@ -83,7 +92,6 @@ public class UserServiceImp implements UserService {
 
     @Override
     public String forgotPassword(String email) {
-
         User user = findByEmail(email);
         System.out.println(user);
         if (user == null) {
@@ -94,7 +102,24 @@ public class UserServiceImp implements UserService {
         userRepository.save(user);
         return user.getResetPasswordToken();
     }
+    public apiResponseDto sendResponse (String response, String email) {
+        if (!response.startsWith("Invalid")) {
+            String subject = "NoReply | Reset Password";
 
+            response = "http://localhost:5173/resetpassword?token=" + response;
+            String content = "<p>Hello,</p>" +
+                    "<p>You've requested a password change. To proceed with the process, please follow the link below:</p>" +
+                    "<p><a href=\"" + response + "\">Reset Password</a></p>" +
+                    "<p>Thank you!</p>";
+            try {
+                emailSender.sendEmail(email, subject, content);
+                System.out.println("Email sent successfully.");
+            } catch (MessagingException | UnsupportedEncodingException e) {
+                System.out.println("Failed to send email. Error: " + e.getMessage());
+            }
+        }
+        return new apiResponseDto(response);
+    }
     @Override
     public String resetPassword(String token, String password) {
         Optional<User> userOptional = userRepository.findByResetPasswordToken(token);

@@ -31,16 +31,18 @@ public class User implements UserDetails {
     private String profilePicUrl;
     @Nullable
     private String aboutMe;
+    @Column(unique = true)
     private String email;
     private BigInteger phoneNumber;
     private LocalDate birthday;
+    @Column(unique = true)
     private String username;
     private String password;
     private String resetPasswordToken;
 
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime tokenCreationDate;
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private Token token;
     @Enumerated(EnumType.STRING)
     private Role role;

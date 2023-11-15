@@ -1,6 +1,5 @@
 package com.charlesxvr.portfoliobackend.security.controllers;
 import com.charlesxvr.portfoliobackend.exceptions.TokenRefreshException;
-import com.charlesxvr.portfoliobackend.javamail.EmailSender;
 import com.charlesxvr.portfoliobackend.security.dto.*;
 import com.charlesxvr.portfoliobackend.security.models.JwtResponse;
 import com.charlesxvr.portfoliobackend.security.models.TokenRefreshRequest;
@@ -12,16 +11,15 @@ import com.charlesxvr.portfoliobackend.security.service.imp.AuthenticationServic
 import com.charlesxvr.portfoliobackend.security.service.imp.JwtServiceImp;
 import com.charlesxvr.portfoliobackend.security.service.imp.RefreshTokenServiceImp;
 import com.charlesxvr.portfoliobackend.security.service.imp.UserServiceImp;
-import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 @RestController
@@ -39,41 +37,30 @@ public class AuthController {
     private RefreshTokenServiceImp refreshTokenServiceImp;
     @Autowired
     private PasswordEncoder passwordEncoder;
-    JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-
-    EmailSender emailSender = new EmailSender(mailSender);
     @PreAuthorize("permitAll")
     @PostMapping("/forgotpassword")
-    public String forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        System.out.println(request.getEmail());
+    public ResponseEntity<apiResponseDto> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         String response = userServiceImp.forgotPassword(request.getEmail());
-        if (!response.startsWith("Invalid")) {
-            String recipientEmail = request.getEmail();
-            String subject = "NoReply | Reset Password";
-
-            response = "http://localhost:8080/reset-password?token=" + response;
-            String content = "<p>Hello,</p>" +
-                    "<p>You've requested a password change. To proceed with the process, please follow the link below:</p>" +
-                    "<p><a href=\"" + response + "\">Reset Password</a></p>" +
-                    "<p>Thank you!</p>";
-            try {
-                emailSender.sendEmail(recipientEmail, subject, content);
-                System.out.println("Email sent successfully.");
-            } catch (MessagingException | UnsupportedEncodingException e) {
-                System.out.println("Failed to send email. Error: " + e.getMessage());
-            }
+        if(response.startsWith("Invalid")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new apiResponseDto(response));
         }
-        return response;
+        apiResponseDto responseDto = userServiceImp.sendResponse(response, request.getEmail());
+        return ResponseEntity.ok(responseDto);
     }
+    @PreAuthorize("permitAll")
     @PutMapping("/reset-password")
-    public String resetPassword(@RequestParam String token,
+    public ResponseEntity<apiResponseDto> resetPassword(@RequestParam String token,
                                 @RequestBody ResetPasswordRequest newPassword) {
         String encodedPassword = passwordEncoder.encode(newPassword.getNewPassword());
-        return userServiceImp.resetPassword(token, encodedPassword);
+        String message = userServiceImp.resetPassword(token, encodedPassword);
+        if (message.startsWith("Invalid")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new apiResponseDto(message));
+        }
+        return ResponseEntity.ok(new apiResponseDto(message));
     }
     @PreAuthorize("permitAll")
     @PostMapping("/signin")
-    public ResponseEntity<?> login
+    public ResponseEntity<JwtResponse> login
             (@RequestBody @Valid AuthenticationRequest authRequest) {
         AuthenticationResponse jwtDto = authenticationServiceImp.login(authRequest);
         return ResponseEntity.ok(new JwtResponse(jwtDto.getJwt(),jwtDto.getRefreshToken(),jwtDto.getUser().getId(), jwtDto.getUser().getUsername(), jwtDto.getUser().getEmail(), (List<?>) jwtDto.getUser().getAuthorities()));
@@ -82,21 +69,33 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<UserDto> createUser(@RequestBody @Valid User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        Token token = this.jwtServiceImp.generateToken(user, authenticationServiceImp.generateExtraClaims(user));
-        this.userServiceImp.newUser(user, token);
-        UserDto userResponse = new UserDto(user);
-        String recipientEmail = user.getEmail();
-        String subject = "NoReply | Reset Password";
-        String content = "<p>Hello,</p>"+ user.getFirstName() + user.getLastName() +
-                "<p>Thank you for register in Solo Resume!</p>" +
-                "<p>Thank you!</p>";
-        try {
-            emailSender.sendEmail(recipientEmail, subject, content);
-            System.out.println("Email sent successfully.");
-        } catch (MessagingException | UnsupportedEncodingException e) {
-            System.out.println("Failed to send email. Error: " + e.getMessage());
-        }
+        UserDto userResponse = authenticationServiceImp.register(user);
         return ResponseEntity.ok(userResponse);
+    }
+    @PreAuthorize("permitAll")
+    @PostMapping("/check-username")
+    public ResponseEntity<apiResponseDto> checkUsername(@RequestBody @Valid usernameDto username) {
+        boolean takenUsername = this.userServiceImp.isUsernameTaken(username.getUsername());
+        if (takenUsername) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new apiResponseDto("The username is already in use"));
+        } else {
+            return ResponseEntity.ok(new apiResponseDto("The username is avaliable"));
+        }
+    }
+    @PreAuthorize("permitAll")
+    @PostMapping("/logout")
+    public ResponseEntity<apiResponseDto> logout(@Valid @RequestHeader("Authorization") String token) {
+        try {
+            InvalidateTokenResult result = this.jwtServiceImp.invalidateToken(token);
+
+            if (result.isStatus()) {
+                return ResponseEntity.ok(new apiResponseDto("Session closed successfully"));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new apiResponseDto(result.getMessage()));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new apiResponseDto("Error closing session"));
+        }
     }
     @PreAuthorize("permitAll")
     @PostMapping("/refreshtoken")

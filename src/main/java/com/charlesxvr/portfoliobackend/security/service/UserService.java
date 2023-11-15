@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface UserService {
     List<User> getUsers();
     User getUserById(Long id);
-    User newUser(User user, Token token);
+    User newUser(User user);
     User updateUser(Long id, User user);
     Optional<User> findByUsername(String username);
     User findByEmail(String email);
