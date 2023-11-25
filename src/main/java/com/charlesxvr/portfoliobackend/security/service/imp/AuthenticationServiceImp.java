@@ -1,15 +1,16 @@
 package com.charlesxvr.portfoliobackend.security.service.imp;
 
 import com.charlesxvr.portfoliobackend.javamail.EmailSender;
-import com.charlesxvr.portfoliobackend.security.dto.AuthenticationRequest;
-import com.charlesxvr.portfoliobackend.security.dto.AuthenticationResponse;
-import com.charlesxvr.portfoliobackend.security.dto.UserDto;
+import com.charlesxvr.portfoliobackend.security.dto.*;
 import com.charlesxvr.portfoliobackend.security.models.entities.RefreshToken;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.service.AuthenticationService;
+import io.jsonwebtoken.Claims;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -43,9 +45,6 @@ public class AuthenticationServiceImp implements AuthenticationService {
     }
     public UserDto register(User user) {
         User newUser = this.userServiceImp.newUser(user);
-        Token token = this.jwtServiceImp.generateToken(user, generateExtraClaims(user));
-        user.setToken(token);
-        jwtServiceImp.saveToken(token);
         String recipientEmail = user.getEmail();
         String subject = "NoReply | New Account Created";
         String content = "<p>Hello,</p>"+ user.getFirstName() + user.getLastName() +
@@ -58,6 +57,13 @@ public class AuthenticationServiceImp implements AuthenticationService {
             System.out.println("Failed to send email. Error: " + e.getMessage());
         }
         return new UserDto(newUser);
+    }
+    public boolean checkEditPermission(String token, pathUrlDto url) {
+        Claims tokenClaims = jwtServiceImp.extractAllClaims(token);
+        String usernameFromClaims = tokenClaims.getSubject();
+        String[] segments = url.getUrl().split("/");
+        String username = segments[2];
+        return Objects.equals(username, usernameFromClaims);
     }
     public Map<String, Object> generateExtraClaims(User user) {
         Map<String, Object> extraClaims = new HashMap<>();

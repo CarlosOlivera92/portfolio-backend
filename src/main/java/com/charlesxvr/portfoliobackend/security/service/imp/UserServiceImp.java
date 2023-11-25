@@ -2,8 +2,8 @@ package com.charlesxvr.portfoliobackend.security.service.imp;
 
 import com.charlesxvr.portfoliobackend.exceptions.UsernameAlreadyExistsException;
 import com.charlesxvr.portfoliobackend.javamail.EmailSender;
+import com.charlesxvr.portfoliobackend.security.dto.UserDto;
 import com.charlesxvr.portfoliobackend.security.dto.apiResponseDto;
-import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.repository.TokenRepository;
 import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,26 +24,33 @@ import java.util.UUID;
 @Service
 public class UserServiceImp implements UserService {
     private static final long EXPIRE_TOKEN_AFTER_MINUTES = 30;
+    JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
 
+    EmailSender emailSender = new EmailSender(mailSender);
     @Autowired
     private UserRepository userRepository;
     @Autowired
     private TokenRepository tokenRepository;
 
     @Override
-    public List<User> getUsers() {
-        return this.userRepository.findAll();
+    public List<UserDto> getUsers() {
+        List<User> userList = this.userRepository.findAll();
+        if (!userList.isEmpty()) {
+            List<UserDto> userDtoList = new ArrayList<>();
+            for (User user : userList) {
+                userDtoList.add(new UserDto(user));
+            }
+            return userDtoList;
+        } else {
+            return null;
+        }
+
     }
 
     @Override
     public User getUserById(Long id) {
         return this.userRepository.findById(id).orElse(null);
     }
-    JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-
-    EmailSender emailSender = new EmailSender(mailSender);
-
-
     @Override
     public User newUser(User user) {
         if (isUsernameTaken(user.getUsername())) {
@@ -51,7 +59,6 @@ public class UserServiceImp implements UserService {
         return this.userRepository.save(user);
     }
     public boolean isUsernameTaken(String username) {
-        // Verificar si el nombre de usuario ya existe en la base de datos
         User existingUser = userRepository.findByUsername(username).orElse(null);
         return existingUser != null;
     }

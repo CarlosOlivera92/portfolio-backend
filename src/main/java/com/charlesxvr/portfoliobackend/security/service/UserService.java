@@ -1,5 +1,6 @@
 package com.charlesxvr.portfoliobackend.security.service;
 
+import com.charlesxvr.portfoliobackend.security.dto.UserDto;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import org.springframework.cglib.core.Local;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
-    List<User> getUsers();
+    List<UserDto> getUsers();
     User getUserById(Long id);
     User newUser(User user);
     User updateUser(Long id, User user);

@@ -42,6 +42,7 @@ public class User implements UserDetails {
 
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime tokenCreationDate;
+    @JsonIgnore
     @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private Token token;
     @Enumerated(EnumType.STRING)

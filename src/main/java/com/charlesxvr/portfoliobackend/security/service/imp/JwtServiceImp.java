@@ -1,8 +1,10 @@
 package com.charlesxvr.portfoliobackend.security.service.imp;
 
 import com.charlesxvr.portfoliobackend.security.dto.InvalidateTokenResult;
+import com.charlesxvr.portfoliobackend.security.models.entities.RefreshToken;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
+import com.charlesxvr.portfoliobackend.security.repository.RefreshTokenRepository;
 import com.charlesxvr.portfoliobackend.security.repository.TokenRepository;
 import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.security.service.JwtService;
@@ -26,6 +28,8 @@ public class JwtServiceImp implements JwtService {
     private TokenRepository tokenRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
     @Value("${security.jwt.expiration-minutes}")
     private Long EXPIRATION_MINUTES;
     @Value("${security.jwt.secret}")
@@ -108,9 +112,12 @@ public class JwtServiceImp implements JwtService {
                 User user = userOptional.get();
 
                 Token tokenResponseBdd = tokenRepository.findByUser_Id(user.getId());
-
+                RefreshToken refreshTokenBbdd = refreshTokenRepository.findByUser_Id(user.getId());
                 if (tokenResponseBdd != null) {
                     tokenRepository.deleteById(tokenResponseBdd.getId());
+                    if (refreshTokenBbdd != null) {
+                        refreshTokenRepository.deleteById(refreshTokenBbdd.getId());
+                    }
                     return new InvalidateTokenResult(true, "Token deleted successfully.");
                 } else {
                     return new InvalidateTokenResult(false, "Token not found for the user");
