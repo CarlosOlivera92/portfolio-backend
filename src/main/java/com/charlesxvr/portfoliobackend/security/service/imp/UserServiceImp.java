@@ -68,10 +68,8 @@ public class UserServiceImp implements UserService {
         if(currentUser != null) {
             currentUser.setFirstName(user.getFirstName());
             currentUser.setLastName(user.getLastName());
-            currentUser.setAboutMe(user.getAboutMe());
             currentUser.setBirthday(user.getBirthday());
             currentUser.setPhoneNumber(user.getPhoneNumber());
-            currentUser.setProfilePicUrl(user.getProfilePicUrl());
             currentUser.setEmail(user.getEmail());
             currentUser.setUsername(user.getUsername());
             if(user.getPassword() == null) {

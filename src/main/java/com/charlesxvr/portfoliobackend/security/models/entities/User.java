@@ -1,5 +1,6 @@
 package com.charlesxvr.portfoliobackend.security.models.entities;
 
+import com.charlesxvr.portfoliobackend.models.entities.UserInfo;
 import com.charlesxvr.portfoliobackend.security.enums.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.annotation.Nullable;
@@ -27,10 +28,7 @@ public class User implements UserDetails {
     private Long id;
     private String firstName;
     private String lastName;
-    @Nullable
-    private String profilePicUrl;
-    @Nullable
-    private String aboutMe;
+
     @Column(unique = true)
     private String email;
     private BigInteger phoneNumber;
@@ -45,6 +43,8 @@ public class User implements UserDetails {
     @JsonIgnore
     @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private Token token;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    private UserInfo userInfo;
     @Enumerated(EnumType.STRING)
     private Role role;
 
