@@ -17,6 +17,21 @@ public class UserInfoServiceImp implements UserInfoService {
 
     @Autowired
     private UserRepository userRepository;
+    public UserInfoDTO getUserInfo(String username) {
+        User existingUser = userRepository.findByUsername(username).orElse(null);
+        if (existingUser != null) {
+            Long userId = existingUser.getId();
+            UserInfo userInfo = this.userInfoRepository.findByUser_Id(userId);
+            UserInfoDTO userInfoDTO = new UserInfoDTO();
+            userInfoDTO.setProfilePicUrl(userInfo.getProfilePicUrl());
+            userInfoDTO.setAboutMe(userInfo.getAboutMe());
+            userInfoDTO.setJobPosition(userInfo.getJobPosition());
+            userInfoDTO.setBannerPicUrl(userInfo.getBannerPicUrl());
+            return userInfoDTO;
+        } else {
+            return null;
+        }
+    }
     public UserInfoDTO createUserInfo(UserInfo userInfo, String username) {
 
         User existingUser = userRepository.findByUsername(username).orElse(null);

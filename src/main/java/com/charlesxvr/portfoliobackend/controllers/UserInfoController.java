@@ -16,6 +16,15 @@ import org.springframework.web.bind.annotation.*;
 public class UserInfoController {
     @Autowired
     private UserInfoServiceImp userInfoServiceImp;
+    @GetMapping("/{username}")
+    public ResponseEntity<UserInfoDTO> getUserInfo (@PathVariable String username) {
+        try {
+            UserInfoDTO userInfoDTO = this.userInfoServiceImp.getUserInfo(username);
+            return ResponseEntity.ok(userInfoDTO);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
     @PostMapping("/{username}")
     public ResponseEntity<?> createUserInfo(@RequestBody @Valid UserInfo userInfo, @PathVariable String username) {
         System.out.println(username);
