@@ -14,11 +14,14 @@ public class UserInfo {
     private String bannerPicUrl;
     private String jobPosition;
     private String aboutMe;
-
-    @OneToOne(fetch = FetchType.EAGER)
+    private String linkedinProfileUrl;
+    private String githubProfileUrl;
+    @Nullable
+    private String address;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "state_id")
+    private States state;
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
     private User user;
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "townships_id")
-    private Townships township;
 }

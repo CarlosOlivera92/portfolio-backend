@@ -10,9 +10,9 @@ public class States {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String state;
-    @OneToOne(mappedBy = "state", fetch = FetchType.LAZY)
-    private Townships township;
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "country_id")
     private Countries country;
+    @OneToOne(mappedBy = "states", fetch = FetchType.LAZY)
+    private UserInfo userInfo;
 }
