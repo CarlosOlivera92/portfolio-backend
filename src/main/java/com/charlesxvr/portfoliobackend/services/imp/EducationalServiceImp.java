@@ -90,8 +90,6 @@ public class EducationalServiceImp implements EducationalService {
             if (educationalBackground.getFocusOfStudies() != null) {
                 existingBackground.setFocusOfStudies(educationalBackground.getFocusOfStudies());
             }
-
-            // Preserve existing userInfo association if not explicitly provided in request
             if (educationalBackground.getUserInfo() == null) {
                 existingBackground.setUserInfo(existingBackground.getUserInfo());
             } else {

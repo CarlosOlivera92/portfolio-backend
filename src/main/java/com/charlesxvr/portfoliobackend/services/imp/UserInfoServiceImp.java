@@ -7,8 +7,11 @@ import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.security.service.imp.UserServiceImp;
 import com.charlesxvr.portfoliobackend.services.UserInfoService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class UserInfoServiceImp implements UserInfoService {
@@ -45,28 +48,46 @@ public class UserInfoServiceImp implements UserInfoService {
         }
     }
     @Override
+    @Transactional
     public UserInfo updateUserInfo(UserInfo userInfo, String username) {
         try {
-            User existingUser = this.userRepository.findByUsername(username).orElse(null);
-            if ( existingUser != null) {
-                UserInfo existingUserInfo = this.userInfoRepository.findByUser_Id(existingUser.getId());
-
-                existingUserInfo.setBannerPicUrl(userInfo.getBannerPicUrl());
-                existingUserInfo.setProfilePicUrl(userInfo.getProfilePicUrl());
-                existingUserInfo.setJobPosition(userInfo.getJobPosition());
-                existingUserInfo.setAboutMe(userInfo.getAboutMe());
-                existingUserInfo.setAddress(userInfo.getAddress());
-                existingUserInfo.setGithubProfileUrl(userInfo.getGithubProfileUrl());
-                existingUserInfo.setLinkedinProfileUrl(userInfo.getLinkedinProfileUrl());
-                existingUserInfo.setState(userInfo.getState());
-                existingUserInfo.setUser(userInfo.getUser());
-
-                return this.userInfoRepository.save(existingUserInfo);
-            } else {
-                return null;
+            Optional<User> existingUser = this.userRepository.findByUsername(username);
+            if (existingUser.isEmpty()) {
+                throw new RuntimeException("User not found for username: " + username);
             }
+
+            UserInfo existingUserInfo = existingUser.get().getUserInfo();
+            if (existingUserInfo == null) {
+                throw new RuntimeException("UserInfo not found for user: " + username);
+            }
+
+            // Selectively update fields based on request data, preserving existing values for missing fields
+            if (userInfo.getBannerPicUrl() != null) {
+                existingUserInfo.setBannerPicUrl(userInfo.getBannerPicUrl());
+            }
+            if (userInfo.getProfilePicUrl() != null) {
+                existingUserInfo.setProfilePicUrl(userInfo.getProfilePicUrl());
+            }
+            if (userInfo.getJobPosition() != null) {
+                existingUserInfo.setJobPosition(userInfo.getJobPosition());
+            }
+            if (userInfo.getAboutMe() != null) {
+                existingUserInfo.setAboutMe(userInfo.getAboutMe());
+            }
+            if (userInfo.getAddress() != null) {
+                existingUserInfo.setAddress(userInfo.getAddress());
+            }
+            if (userInfo.getGithubProfileUrl() != null) {
+                existingUserInfo.setGithubProfileUrl(userInfo.getGithubProfileUrl());
+            }
+            if (userInfo.getLinkedinProfileUrl() != null) {
+                existingUserInfo.setLinkedinProfileUrl(userInfo.getLinkedinProfileUrl());
+            }
+
+            return this.userInfoRepository.save(existingUserInfo);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Unexpected error while updating user info data: ", e);
         }
     }
+
 }
