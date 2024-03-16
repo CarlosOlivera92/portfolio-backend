@@ -1,9 +1,7 @@
 package com.charlesxvr.portfoliobackend.models.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
@@ -18,4 +16,7 @@ public class EducationalBackground {
     private Date startDate;
     private Date endDate;
     private String focusOfStudies;
+    @ManyToOne(fetch = FetchType.LAZY) @JsonIgnore
+    @JoinColumn(name = "userInfo_id")
+    private UserInfo userInfo;
 }

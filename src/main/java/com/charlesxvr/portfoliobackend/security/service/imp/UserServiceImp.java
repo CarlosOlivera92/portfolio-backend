@@ -58,6 +58,7 @@ public class UserServiceImp implements UserService {
         }
         return this.userRepository.save(user);
     }
+    @Override
     public boolean isUsernameTaken(String username) {
         User existingUser = userRepository.findByUsername(username).orElse(null);
         return existingUser != null;
@@ -107,6 +108,7 @@ public class UserServiceImp implements UserService {
         userRepository.save(user);
         return user.getResetPasswordToken();
     }
+    @Override
     public apiResponseDto sendResponse (String response, String email) {
         if (!response.startsWith("Invalid")) {
             String subject = "NoReply | Reset Password";

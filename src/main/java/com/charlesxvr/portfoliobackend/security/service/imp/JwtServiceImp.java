@@ -34,16 +34,10 @@ public class JwtServiceImp implements JwtService {
     private Long EXPIRATION_MINUTES;
     @Value("${security.jwt.secret}")
     private String SECRET_KEY;
-
+    @Override
     public Token findTokenByUserId(Long userId) {
         Optional<Token> optionalToken  = tokenRepository.findByUserId(userId);
-        if (optionalToken.isPresent()) {
-            Token token = optionalToken.get();
-            boolean isTokenValid = validateToken(token.getToken());
-            if (isTokenValid) {
-                return token;
-            } else return null;
-        } else return null;
+        return optionalToken.orElse(null);
     }
     @Override
     public Token generateToken(User user, Map<String, Object> extraClaims) {
@@ -62,6 +56,7 @@ public class JwtServiceImp implements JwtService {
         token.setCreatedDate(issuedAt);
         token.setExpiryDate(expiration);
         token.setUser(user);
+        this.tokenRepository.save(token);
         return token;
     }
 
@@ -76,6 +71,7 @@ public class JwtServiceImp implements JwtService {
 
         return Keys.hmacShaKeyFor(secret);
     }
+    @Override
     public boolean validateToken(String token) {
         try {
             Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
@@ -97,9 +93,11 @@ public class JwtServiceImp implements JwtService {
             return false;
         }
     }
+    @Override
     public String extractUsername(String jwt) {
         return extractAllClaims(jwt).getSubject();
     }
+    @Override
     @Transactional
     public InvalidateTokenResult invalidateToken(String jwtToken) {
         try {
@@ -131,6 +129,7 @@ public class JwtServiceImp implements JwtService {
             return new InvalidateTokenResult(false, "An error occurred during token deletion: " + ex.getMessage());
         }
     }
+    @Override
     public Claims extractAllClaims(String jwt) {
         return Jwts.parserBuilder().setSigningKey(generateKey()).build()
                 .parseClaimsJws(jwt).getBody();

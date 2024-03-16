@@ -6,8 +6,12 @@ import com.charlesxvr.portfoliobackend.security.models.entities.RefreshToken;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.service.AuthenticationService;
+import com.charlesxvr.portfoliobackend.security.service.JwtService;
+import com.charlesxvr.portfoliobackend.security.service.RefreshTokenService;
+import com.charlesxvr.portfoliobackend.security.service.UserService;
 import io.jsonwebtoken.Claims;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,27 +28,55 @@ import java.util.Optional;
 
 @Service
 public class AuthenticationServiceImp implements AuthenticationService {
+    private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService refreshTokenService;
+    private final UserService userService;
+    private final JwtService jwtService;
     @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private RefreshTokenServiceImp refreshTokenServiceImp;
-    @Autowired
-    private UserServiceImp userServiceImp;
-    @Autowired
-    private JwtServiceImp jwtServiceImp;
+    public AuthenticationServiceImp(
+            AuthenticationManager authenticationManager,
+            RefreshTokenService refreshTokenService,
+            UserService userService,
+            JwtService jwtService
+    ) {
+        this.authenticationManager = authenticationManager;
+        this.refreshTokenService = refreshTokenService;
+        this.userService = userService;
+        this.jwtService = jwtService;
+    }
     JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
     EmailSender emailSender = new EmailSender(mailSender);
+    @Override
+    @Transactional
     public AuthenticationResponse login(AuthenticationRequest authenticationRequest) {
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword());
+
+        // Check authentication using AuthenticationManager
         authenticationManager.authenticate(authToken);
-        User user = userServiceImp.findByUsername(authenticationRequest.getUsername()).get();
-        Token jwt = jwtServiceImp.generateToken(user, generateExtraClaims(user));
-        this.jwtServiceImp.saveToken(jwt);
-        RefreshToken refreshToken = refreshTokenServiceImp.createRefreshToken(user.getId());
+
+        // Fetch User after successful authentication
+        User user = userService.findByUsername(authenticationRequest.getUsername()).get();
+
+        // Check for existing token and handle expiration
+        Token existingToken = jwtService.findTokenByUserId(user.getId());
+        if (existingToken != null) {
+            if (jwtService.validateToken(existingToken.getToken())) {
+                RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+                return new AuthenticationResponse(existingToken.getToken(), refreshToken.getToken(), user);
+            } else {
+                this.jwtService.invalidateToken(existingToken.getToken()); // Invalidate expired token
+                this.refreshTokenService.deleteByUserId(user.getId());
+            }
+        }
+        this.refreshTokenService.deleteByUserId(user.getId());
+        // Generate new JWT if no valid existing token
+        Token jwt = jwtService.generateToken(user, generateExtraClaims(user));
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
         return new AuthenticationResponse(jwt.getToken(), refreshToken.getToken(), user);
     }
+    @Override
     public UserDto register(User user) {
-        User newUser = this.userServiceImp.newUser(user);
+        User newUser = this.userService.newUser(user);
         String recipientEmail = user.getEmail();
         String subject = "NoReply | New Account Created";
         String content = "<p>Hello,</p>"+ user.getFirstName() + user.getLastName() +
@@ -58,13 +90,15 @@ public class AuthenticationServiceImp implements AuthenticationService {
         }
         return new UserDto(newUser);
     }
+    @Override
     public boolean checkEditPermission(String token, pathUrlDto url) {
-        Claims tokenClaims = jwtServiceImp.extractAllClaims(token);
+        Claims tokenClaims = jwtService.extractAllClaims(token);
         String usernameFromClaims = tokenClaims.getSubject();
         String[] segments = url.getUrl().split("/");
         String username = segments[2];
         return Objects.equals(username, usernameFromClaims);
     }
+    @Override
     public Map<String, Object> generateExtraClaims(User user) {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("name", user.getFirstName());

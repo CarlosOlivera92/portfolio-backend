@@ -2,7 +2,9 @@ package com.charlesxvr.portfoliobackend.controllers;
 
 import com.charlesxvr.portfoliobackend.security.dto.UserDto;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
+import com.charlesxvr.portfoliobackend.security.service.UserService;
 import com.charlesxvr.portfoliobackend.security.service.imp.UserServiceImp;
+import com.charlesxvr.portfoliobackend.services.UserInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,14 +17,18 @@ import java.util.List;
 @RequestMapping("api/users")
 @CrossOrigin(origins = "http://localhost:5173")
 public class UsersController {
+    private final UserService userService;
     @Autowired
-    private UserServiceImp userServiceImp;
-
+    public UsersController(
+            UserService userService
+    ) {
+        this.userService = userService;
+    }
     @PreAuthorize("hasAuthority('READ_ALL_USERS')")
     @GetMapping("/")
     public ResponseEntity<List<UserDto>> getUsers() {
         try {
-            List<UserDto> userList = userServiceImp.getUsers();
+            List<UserDto> userList = userService.getUsers();
             if (!userList.isEmpty()) {
                 return ResponseEntity.ok(userList);
             } else {
@@ -36,7 +42,7 @@ public class UsersController {
     @GetMapping("/user/{username}")
     public ResponseEntity<Object> getUserByUsername(@PathVariable String username) {
         try {
-            User user = this.userServiceImp.findByUsername(username).get();
+            User user = this.userService.findByUsername(username).get();
             UserDto userDto = new UserDto(user);
             return ResponseEntity.ok(userDto);
         } catch (Exception e) {

@@ -2,6 +2,7 @@ package com.charlesxvr.portfoliobackend.security.service.imp;
 
 import com.charlesxvr.portfoliobackend.exceptions.TokenRefreshException;
 import com.charlesxvr.portfoliobackend.security.models.entities.RefreshToken;
+import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.repository.RefreshTokenRepository;
 import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.security.service.RefreshTokenService;
@@ -49,7 +50,8 @@ public class RefreshTokenServiceImp implements RefreshTokenService {
     }
 
     @Override
-    public int deleteByUserId(Long id) {
-        return refreshTokenRepository.deleteByUser(userRepository.findById(id).get());
+    public Long deleteByUserId(Long id) {
+        Optional<User> user = userRepository.findById(id);
+        return (long) refreshTokenRepository.deleteByUserId(user.get().getId());
     }
 }

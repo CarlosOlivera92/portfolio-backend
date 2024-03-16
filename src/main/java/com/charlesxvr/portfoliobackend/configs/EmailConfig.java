@@ -12,7 +12,7 @@ public class EmailConfig {
         properties.put("mail.smtp.host", "smtp.gmail.com");
         properties.put("mail.smtp.port", "587");
         properties.put("mail.smtp.user", "thestuntman92@gmail.com");
-        properties.put("mail.smtp.password", "kxio bwcx gzye fyfq");
+        properties.put("mail.smtp.password", "ttfg irne lest ymfa");
         return properties;
     }
 }

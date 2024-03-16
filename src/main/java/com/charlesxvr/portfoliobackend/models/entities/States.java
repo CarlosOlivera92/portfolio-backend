@@ -13,6 +13,6 @@ public class States {
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "country_id")
     private Countries country;
-    @OneToOne(mappedBy = "states", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "state", fetch = FetchType.LAZY)
     private UserInfo userInfo;
 }

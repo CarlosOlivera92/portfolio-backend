@@ -14,24 +14,19 @@ import org.springframework.stereotype.Service;
 public class UserInfoServiceImp implements UserInfoService {
     @Autowired
     private UserInfoRepository userInfoRepository;
-
     @Autowired
     private UserRepository userRepository;
-    public UserInfoDTO getUserInfo(String username) {
+    @Override
+    public UserInfo getUserInfo(String username) {
         User existingUser = userRepository.findByUsername(username).orElse(null);
         if (existingUser != null) {
             Long userId = existingUser.getId();
-            UserInfo userInfo = this.userInfoRepository.findByUser_Id(userId);
-            UserInfoDTO userInfoDTO = new UserInfoDTO();
-            userInfoDTO.setProfilePicUrl(userInfo.getProfilePicUrl());
-            userInfoDTO.setAboutMe(userInfo.getAboutMe());
-            userInfoDTO.setJobPosition(userInfo.getJobPosition());
-            userInfoDTO.setBannerPicUrl(userInfo.getBannerPicUrl());
-            return userInfoDTO;
+            return this.userInfoRepository.findByUser_Id(userId);
         } else {
             return null;
         }
     }
+    @Override
     public UserInfoDTO createUserInfo(UserInfo userInfo, String username) {
 
         User existingUser = userRepository.findByUsername(username).orElse(null);
@@ -39,6 +34,7 @@ public class UserInfoServiceImp implements UserInfoService {
             userInfo.setUser(existingUser);
             this.userInfoRepository.save(userInfo);
             UserInfoDTO userInfoDTO = new UserInfoDTO();
+            userInfoDTO.setId(userInfoDTO.getId());
             userInfoDTO.setAboutMe(userInfo.getAboutMe());
             userInfoDTO.setBannerPicUrl(userInfo.getBannerPicUrl());
             userInfoDTO.setJobPosition(userInfo.getJobPosition());
@@ -47,7 +43,30 @@ public class UserInfoServiceImp implements UserInfoService {
         } else {
             return null;
         }
-
     }
+    @Override
+    public UserInfo updateUserInfo(UserInfo userInfo, String username) {
+        try {
+            User existingUser = this.userRepository.findByUsername(username).orElse(null);
+            if ( existingUser != null) {
+                UserInfo existingUserInfo = this.userInfoRepository.findByUser_Id(existingUser.getId());
 
+                existingUserInfo.setBannerPicUrl(userInfo.getBannerPicUrl());
+                existingUserInfo.setProfilePicUrl(userInfo.getProfilePicUrl());
+                existingUserInfo.setJobPosition(userInfo.getJobPosition());
+                existingUserInfo.setAboutMe(userInfo.getAboutMe());
+                existingUserInfo.setAddress(userInfo.getAddress());
+                existingUserInfo.setGithubProfileUrl(userInfo.getGithubProfileUrl());
+                existingUserInfo.setLinkedinProfileUrl(userInfo.getLinkedinProfileUrl());
+                existingUserInfo.setState(userInfo.getState());
+                existingUserInfo.setUser(userInfo.getUser());
+
+                return this.userInfoRepository.save(existingUserInfo);
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

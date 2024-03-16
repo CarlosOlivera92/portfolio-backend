@@ -7,6 +7,10 @@ import com.charlesxvr.portfoliobackend.security.models.TokenRefreshResponse;
 import com.charlesxvr.portfoliobackend.security.models.entities.RefreshToken;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
+import com.charlesxvr.portfoliobackend.security.service.AuthenticationService;
+import com.charlesxvr.portfoliobackend.security.service.JwtService;
+import com.charlesxvr.portfoliobackend.security.service.RefreshTokenService;
+import com.charlesxvr.portfoliobackend.security.service.UserService;
 import com.charlesxvr.portfoliobackend.security.service.imp.AuthenticationServiceImp;
 import com.charlesxvr.portfoliobackend.security.service.imp.JwtServiceImp;
 import com.charlesxvr.portfoliobackend.security.service.imp.RefreshTokenServiceImp;
@@ -29,24 +33,27 @@ import java.util.Optional;
 @CrossOrigin(origins = "http://localhost:5173/")
 
 public class AuthController {
+    private final UserService userService;
+    private final JwtService jwtService;
+    private final AuthenticationService authenticationService;
+    private final RefreshTokenService refreshTokenService;
+    private final PasswordEncoder passwordEncoder;
     @Autowired
-    private UserServiceImp userServiceImp;
-    @Autowired
-    private JwtServiceImp jwtServiceImp;
-    @Autowired
-    private AuthenticationServiceImp authenticationServiceImp;
-    @Autowired
-    private RefreshTokenServiceImp refreshTokenServiceImp;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public AuthController(AuthenticationService authenticationService, RefreshTokenService refreshTokenService, JwtService jwtService, UserService userService, PasswordEncoder passwordEncoder) {
+        this.authenticationService = authenticationService;
+        this.refreshTokenService = refreshTokenService;
+        this.jwtService = jwtService;
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+    }
     @PreAuthorize("permitAll")
     @PostMapping("/forgotpassword")
     public ResponseEntity<apiResponseDto> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        String response = userServiceImp.forgotPassword(request.getEmail());
+        String response = userService.forgotPassword(request.getEmail());
         if(response.startsWith("Invalid")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new apiResponseDto(response));
         }
-        apiResponseDto responseDto = userServiceImp.sendResponse(response, request.getEmail());
+        apiResponseDto responseDto = userService.sendResponse(response, request.getEmail());
         return ResponseEntity.ok(responseDto);
     }
     @PreAuthorize("permitAll")
@@ -54,7 +61,7 @@ public class AuthController {
     public ResponseEntity<apiResponseDto> resetPassword(@RequestParam String token,
                                 @RequestBody ResetPasswordRequest newPassword) {
         String encodedPassword = passwordEncoder.encode(newPassword.getNewPassword());
-        String message = userServiceImp.resetPassword(token, encodedPassword);
+        String message = userService.resetPassword(token, encodedPassword);
         if (message.startsWith("Invalid")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new apiResponseDto(message));
         }
@@ -64,20 +71,20 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity<JwtResponse> login
             (@RequestBody @Valid AuthenticationRequest authRequest) {
-        AuthenticationResponse jwtDto = authenticationServiceImp.login(authRequest);
+        AuthenticationResponse jwtDto = authenticationService.login(authRequest);
         return ResponseEntity.ok(new JwtResponse(jwtDto.getJwt(),jwtDto.getRefreshToken(),jwtDto.getUser().getId(), jwtDto.getUser().getUsername(), jwtDto.getUser().getEmail(), (List<?>) jwtDto.getUser().getAuthorities()));
     }
     @PreAuthorize("permitAll")
     @PostMapping("/signup")
     public ResponseEntity<UserDto> createUser(@RequestBody @Valid User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        UserDto userResponse = authenticationServiceImp.register(user);
+        UserDto userResponse = authenticationService.register(user);
         return ResponseEntity.ok(userResponse);
     }
     @PreAuthorize("permitAll")
     @PostMapping("/check-username")
     public ResponseEntity<apiResponseDto> checkUsername(@RequestBody @Valid usernameDto username) {
-        boolean takenUsername = this.userServiceImp.isUsernameTaken(username.getUsername());
+        boolean takenUsername = this.userService.isUsernameTaken(username.getUsername());
         if (takenUsername) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new apiResponseDto("The username is already in use"));
         } else {
@@ -88,7 +95,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<apiResponseDto> logout(@Valid @RequestHeader("Authorization") String token) {
         try {
-            InvalidateTokenResult result = this.jwtServiceImp.invalidateToken(token);
+            InvalidateTokenResult result = this.jwtService.invalidateToken(token);
 
             if (result.isStatus()) {
                 return ResponseEntity.ok(new apiResponseDto("Session closed successfully"));
@@ -103,15 +110,15 @@ public class AuthController {
     @PostMapping("/refreshtoken")
     public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest request){
         String requestRefreshToken = request.getRefreshToken();
-        return refreshTokenServiceImp.findByToken(requestRefreshToken)
-                .map(refreshTokenServiceImp::verifyExpiration)
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
                 .map(RefreshToken::getUser)
                 .map(user -> {
-                    Token token = jwtServiceImp.generateToken(user, authenticationServiceImp.generateExtraClaims(user));
-                    jwtServiceImp.invalidateToken(user.getToken().getToken());
-                    jwtServiceImp.saveToken(token);
-                    refreshTokenServiceImp.deleteByUserId(user.getId());
-                    RefreshToken newRefreshToken = refreshTokenServiceImp.createRefreshToken(user.getId());
+                    Token token = jwtService.generateToken(user, authenticationService.generateExtraClaims(user));
+                    jwtService.invalidateToken(user.getToken().getToken());
+                    jwtService.saveToken(token);
+                    refreshTokenService.deleteByUserId(user.getId());
+                    RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getId());
                     return ResponseEntity.ok(new TokenRefreshResponse(token.getToken(), newRefreshToken.getToken()));
                 }).orElseThrow( ()  -> new TokenRefreshException(requestRefreshToken, "Refresh token not in database"));
     }
