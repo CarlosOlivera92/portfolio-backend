@@ -21,7 +21,7 @@ public class UserInfoController {
     private final UserInfoService userInfoService;
     @Autowired
     public UserInfoController(
-            UserInfoService userInfoService
+        UserInfoService userInfoService
     ) {
         this.userInfoService = userInfoService;
     }

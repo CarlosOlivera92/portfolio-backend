@@ -1,11 +1,15 @@
 package com.charlesxvr.portfoliobackend.controllers;
 
 import com.charlesxvr.portfoliobackend.models.entities.EducationalBackground;
+import com.charlesxvr.portfoliobackend.security.dto.apiResponseDto;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.service.UserService;
 import com.charlesxvr.portfoliobackend.services.EducationalService;
 import com.charlesxvr.portfoliobackend.services.imp.EducationalServiceImp;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +30,7 @@ public class EducationalController {
     }
 
     @GetMapping("/{username}")
-    public ResponseEntity<List<EducationalBackground>> getAllUserEducationalBackgrounds(@PathVariable String username) {
+    public ResponseEntity<List<EducationalBackground>> getAllUserEducationalBackgroundsByUser(@PathVariable String username) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);
             List<EducationalBackground> educationalBackgroundList = this.educationalService.findAllByUserId(existingUser.get().getId());
@@ -38,13 +42,13 @@ public class EducationalController {
             throw new RuntimeException(e.getMessage());
         }
     }
-    @PutMapping("/")
-    public ResponseEntity<EducationalBackground> updateEducationalBackground(@RequestBody EducationalBackground educationalBackground) {
+    @PutMapping("/{username}/item/{educationalId}")
+    public ResponseEntity<?> updateEducationalBackground(@RequestBody EducationalBackground educationalBackground, @PathVariable Long educationalId, @PathVariable String username) {
         try {
-            EducationalBackground existingEducationalBackground = this.educationalService.updateEducationalBackground(educationalBackground);
-            return ResponseEntity.ok().build();
+            EducationalBackground existingEducationalBackground = this.educationalService.updateEducationalBackground(educationalBackground, educationalId, username);
+            return ResponseEntity.ok().body(existingEducationalBackground);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
     @PostMapping("/{username}")
@@ -58,6 +62,28 @@ public class EducationalController {
             return ResponseEntity.status(201).body(response);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
+        }
+    }
+    @GetMapping("/{username}/item/{eduId}")
+    public ResponseEntity<?> getEducationBackgroundById(@PathVariable Long eduId, @PathVariable String username) {
+        try {
+            EducationalBackground educationalBackground = this.educationalService.getUserEducationalBackgroundById(eduId, username);
+            if(educationalBackground == null){
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok().body(educationalBackground);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new apiResponseDto(e.getMessage()));
+        }
+    }
+    @DeleteMapping("/{username}/item/{eduId}")
+    public ResponseEntity<?> deleteEducationalItem(@PathVariable String username, @PathVariable Long eduId) {
+        try {
+            Optional<User> existingUser = this.userService.findByUsername(username);
+            EducationalBackground deletedBackground = this.educationalService.deleteEducationalBackgroundById(existingUser.get().getId(), eduId);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(deletedBackground);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
