@@ -1,7 +1,9 @@
 package com.charlesxvr.portfoliobackend.controllers;
 
 import com.charlesxvr.portfoliobackend.dto.UserInfoDTO;
+import com.charlesxvr.portfoliobackend.models.entities.EducationalBackground;
 import com.charlesxvr.portfoliobackend.models.entities.UserInfo;
+import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.service.UserService;
 import com.charlesxvr.portfoliobackend.services.UserInfoService;
 import com.charlesxvr.portfoliobackend.services.imp.UserInfoServiceImp;
@@ -49,6 +51,15 @@ public class UserInfoController {
             return ResponseEntity.ok(userInfoDTO);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+    @PutMapping("/{username}")
+    public ResponseEntity<?> updateEducationalBackground(@RequestBody UserInfo userInfo, @PathVariable String username) {
+        try {
+            UserInfo existingUserInfo = this.userInfoService.updateUserInfo(userInfo, username);
+            return ResponseEntity.ok().body(existingUserInfo);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
