@@ -66,6 +66,7 @@ public class CoursesServiceImp implements CoursesService {
     }
 
     @Override
+    @Transactional
     public Courses updateCourse(Courses course, Long courseId, String username) {
         try {
             Optional<User> existingUser = userRepository.findByUsername(username);
@@ -108,6 +109,7 @@ public class CoursesServiceImp implements CoursesService {
     }
 
     @Override
+    @Transactional
     public Courses deleteCourse(Long userId, Long courseId) {
         try {
             Optional<User> existingUser = userRepository.findById(userId);
