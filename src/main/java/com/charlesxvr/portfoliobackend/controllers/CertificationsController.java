@@ -74,4 +74,58 @@ public class CertificationsController {
             throw new RuntimeException(e.getMessage());
         }
     }
+    @PutMapping("/{username}/{certificationId}")
+    public ResponseEntity<Certifications> updateCertificationByUser(@PathVariable String username, @PathVariable Long certificationId, @RequestBody Certifications certification) {
+        try {
+            Certifications updatedCertification = this.certificationsService.updateCertificationByUserInfo(certification, username, certificationId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(updatedCertification);
+        } catch (Exception e){
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+    @PutMapping("/{username}/courses/{courseId}/{certificationId}")
+    public ResponseEntity<Certifications> updateCertificationByCourse(@PathVariable String username, @PathVariable Long courseId, @PathVariable Long certificationId, @RequestBody Certifications certification) {
+        try {
+            Certifications updatedCertification = this.certificationsService.updateCertificationByCourse(certification, courseId, username, certificationId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(updatedCertification);
+        } catch (Exception e){
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+    @PutMapping("/{username}/educational/{educationalId}/{certificationId}")
+    public ResponseEntity<Certifications> updateCertificationByEducational(@PathVariable String username, @PathVariable Long certificationId, @PathVariable Long educationalId, @RequestBody Certifications certification) {
+        try {
+            Certifications updatedCertification = this.certificationsService.updateCertificationByEducation(certification, educationalId, username, certificationId );
+            return ResponseEntity.status(HttpStatus.CREATED).body(updatedCertification);
+        } catch (Exception e){
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+    @DeleteMapping("/{username}/{certificationId}")
+    public ResponseEntity<Long> deleteCertificationByUser(@PathVariable String username, @PathVariable Long certificationId) {
+        try {
+            Long deletedRows = this.certificationsService.deleteOneByUserInfoAndId(username, certificationId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(deletedRows);
+        } catch (Exception e){
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+    @DeleteMapping("/{username}/courses/{courseId}/{certificationId}")
+    public ResponseEntity<Long> deleteCertificationByCourse(@PathVariable String username, @PathVariable Long certificationId, @PathVariable Long courseId) {
+        try {
+            Long deletedRows = this.certificationsService.deleteOneByCourseAndId(username, courseId, certificationId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(deletedRows);
+        } catch (Exception e){
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+    @DeleteMapping("/{username}/educational/{educationalId}/{certificationId}")
+    public ResponseEntity<Long> deleteCertificationByEducational(@PathVariable String username, @PathVariable Long certificationId, @PathVariable Long educationalId) {
+        try {
+            Long deletedRows = this.certificationsService.deleteOneByEducationalAndId(username,educationalId, certificationId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(deletedRows);
+        } catch (Exception e){
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 }
