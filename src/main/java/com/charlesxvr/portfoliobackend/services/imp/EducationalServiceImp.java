@@ -127,7 +127,8 @@ public class EducationalServiceImp implements EducationalService {
     @Override
     public List<EducationalBackground> findAllByUserId(Long userId) {
         try {
-            return this.educationalRepository.findAllByUserInfoId(userId);
+            UserInfo userInfo = this.userInfoRepository.findByUser_Id(userId);
+            return this.educationalRepository.findAllByUserInfoId(userInfo.getId());
         } catch (Exception e) {
             throw new RuntimeException("Unexpected error while trying to fetch all educational background data: ", e);
         }

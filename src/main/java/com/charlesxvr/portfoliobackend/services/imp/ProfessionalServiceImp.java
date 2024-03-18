@@ -130,7 +130,8 @@ public class ProfessionalServiceImp implements ProfessionalService {
     @Override
     public List<ProfessionalBackground> findAllByUserId(Long userId) {
         try {
-            return professionalRepository.findByUserInfo_Id(userId);
+            UserInfo userInfo = this.userInfoRepository.findByUser_Id(userId);
+            return professionalRepository.findByUserInfo_Id(userInfo.getId());
         } catch (Exception e) {
             throw new RuntimeException("Unexpected error while trying to fetch all professional background data: ", e);
         }

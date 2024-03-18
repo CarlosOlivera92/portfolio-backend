@@ -94,35 +94,36 @@ public class JwtServiceImp implements JwtService {
         }
     }
     @Override
-    public String extractUsername(String jwt) {
-        return extractAllClaims(jwt).getSubject();
-    }
-    @Override
     @Transactional
     public InvalidateTokenResult invalidateToken(String jwtToken) {
         try {
             String token = jwtToken.replace("Bearer ", "");
-            String username = extractUsername(token);
+            if (validateToken(token)) {
+                String username = extractAllClaims(token).getSubject();
+                Optional<User> userOptional = userRepository.findByUsername(username);
 
-            Optional<User> userOptional = userRepository.findByUsername(username);
+                if (userOptional.isPresent()) {
+                    User user = userOptional.get();
 
-            if (userOptional.isPresent()) {
-                User user = userOptional.get();
-
-                Token tokenResponseBdd = tokenRepository.findByUser_Id(user.getId());
-                RefreshToken refreshTokenBbdd = refreshTokenRepository.findByUser_Id(user.getId());
-                if (tokenResponseBdd != null) {
-                    tokenRepository.deleteById(tokenResponseBdd.getId());
-                    if (refreshTokenBbdd != null) {
-                        refreshTokenRepository.deleteById(refreshTokenBbdd.getId());
+                    Token tokenResponseBdd = tokenRepository.findByUser_Id(user.getId());
+                    RefreshToken refreshTokenBbdd = refreshTokenRepository.findByUser_Id(user.getId());
+                    if (tokenResponseBdd != null) {
+                        tokenRepository.deleteById(tokenResponseBdd.getId());
+                        if (refreshTokenBbdd != null) {
+                            refreshTokenRepository.deleteById(refreshTokenBbdd.getId());
+                        }
+                        return new InvalidateTokenResult(true, "Token deleted successfully.");
+                    } else {
+                        return new InvalidateTokenResult(false, "Token not found for the user");
                     }
-                    return new InvalidateTokenResult(true, "Token deleted successfully.");
                 } else {
-                    return new InvalidateTokenResult(false, "Token not found for the user");
+                    return new InvalidateTokenResult(false, "User not found");
                 }
             } else {
-                return new InvalidateTokenResult(false, "User not found");
+                this.tokenRepository.delete_by_token(token);
+                return new InvalidateTokenResult(true, "Expired Token has been deleted");
             }
+
         } catch (EmptyResultDataAccessException ex) {
             return new InvalidateTokenResult(false, "No results found for token deletion.");
         } catch (Exception ex) {
@@ -131,7 +132,11 @@ public class JwtServiceImp implements JwtService {
     }
     @Override
     public Claims extractAllClaims(String jwt) {
-        return Jwts.parserBuilder().setSigningKey(generateKey()).build()
-                .parseClaimsJws(jwt).getBody();
+        try {
+            return Jwts.parserBuilder().setSigningKey(generateKey()).build()
+                    .parseClaimsJws(jwt).getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("An error occurred trying to extract the token claims:  " + e.getMessage());
+        }
     }
 }
