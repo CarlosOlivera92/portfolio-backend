@@ -16,4 +16,7 @@ public class Certifications {
     @ManyToOne(fetch = FetchType.LAZY) @JsonIgnore
     @JoinColumn(name = "courses_id")
     private Courses courses;
+    @ManyToOne(fetch = FetchType.LAZY) @JsonIgnore
+    @JoinColumn(name = "userInfo_id")
+    private UserInfo userInfo;
 }
