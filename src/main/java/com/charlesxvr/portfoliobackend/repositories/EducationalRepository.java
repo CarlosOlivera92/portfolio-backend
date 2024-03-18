@@ -15,4 +15,7 @@ public interface EducationalRepository extends JpaRepository<EducationalBackgrou
 
     @Query("select e from EducationalBackground e where e.userInfo.id = ?1")
     List<EducationalBackground> findAllByUserInfoId(Long id);
+
+    @Query("select e from EducationalBackground e where e.userInfo.id = ?1 and e.id = ?2")
+    EducationalBackground findByUserInfo_IdAndId(Long id, Long id1);
 }
