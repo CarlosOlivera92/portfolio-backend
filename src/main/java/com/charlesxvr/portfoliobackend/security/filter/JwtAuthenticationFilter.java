@@ -1,6 +1,7 @@
 package com.charlesxvr.portfoliobackend.security.filter;
 
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
+import com.charlesxvr.portfoliobackend.security.repository.TokenRepository;
 import com.charlesxvr.portfoliobackend.security.service.imp.JwtServiceImp;
 import com.charlesxvr.portfoliobackend.security.service.imp.UserServiceImp;
 import jakarta.servlet.FilterChain;
@@ -16,12 +17,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-public class    JwtAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
     private UserServiceImp userServiceImp;
     @Autowired
     private JwtServiceImp jwtServiceImp;
+    @Autowired
+    private TokenRepository tokenRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -37,15 +40,19 @@ public class    JwtAuthenticationFilter extends OncePerRequestFilter {
         String jwt = authHeader.split(" ")[1];
 
         //3. Obtener subject/username desde el jwt
-        String username = jwtServiceImp.extractUsername(jwt);
+        if (jwtServiceImp.validateToken(jwt)) {
+            String username = jwtServiceImp.extractAllClaims(jwt).getSubject();
 
-        //4. Setear un objeto Authentication dentro del SecurityContext
+            //4. Setear un objeto Authentication dentro del SecurityContext
 
-        User user = userServiceImp.findByUsername(username).get();
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                username, null, user.getAuthorities()
-        );
-        SecurityContextHolder.getContext().setAuthentication(authToken);
+            User user = userServiceImp.findByUsername(username).get();
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    username, null, user.getAuthorities()
+            );
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        } else {
+            this.tokenRepository.delete_by_token(jwt);
+        }
 
         //5. Ejecutar el restro de filtros
 

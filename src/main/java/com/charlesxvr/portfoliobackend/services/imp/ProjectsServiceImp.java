@@ -9,10 +9,11 @@ import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.services.ProjectsService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-
+@Service
 public class ProjectsServiceImp implements ProjectsService {
     private final ProjectsRepository projectsRepository;
     private final UserRepository userRepository;
@@ -60,15 +61,18 @@ public class ProjectsServiceImp implements ProjectsService {
 
     @Override
     @Transactional
-    public Projects updateProfessionalBackground(Projects project, Long projId, String username) {
+    public Projects updateProject(Projects project, Long projId, String username) {
         try {
             Optional<User> existingUser = userRepository.findByUsername(username);
             if (existingUser.isEmpty()) {
                 throw new RuntimeException("User not found");
             }
             UserInfo userInfo = existingUser.get().getUserInfo();
-            Projects existingProject = projectsRepository.findOneByUserInfo_id(userInfo.getId());
-
+            List<Projects> existingProjects = projectsRepository.findByUserInfo_Id(userInfo.getId());
+            Projects existingProject = existingProjects.stream()
+                    .filter(item -> item.getId().equals(projId))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Project item not found for ID: " + projId));
             // Selectively update fields based on request data, preserving existing values for missing fields
             if (project.getProjectName() != null) {
                 existingProject.setProjectName(project.getProjectName());
@@ -103,7 +107,11 @@ public class ProjectsServiceImp implements ProjectsService {
                 throw new RuntimeException("User not found");
             }
             UserInfo userInfo = existingUser.get().getUserInfo();
-            Projects project = projectsRepository.findOneByUserInfo_id(userInfo.getId());
+            List<Projects> existingProjects = projectsRepository.findByUserInfo_Id(userInfo.getId());
+            Projects project = existingProjects.stream()
+                    .filter(item -> item.getId().equals(projId))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Project item not found for ID: " + projId));
 
             projectsRepository.deleteById(project.getId());
             return project;
@@ -113,6 +121,7 @@ public class ProjectsServiceImp implements ProjectsService {
     }
 
     @Override
+    @Transactional
     public List<Projects> findAllByUserId(Long userId) {
         try {
             UserInfo userInfo = this.userInfoRepository.findByUser_Id(userId);

@@ -82,6 +82,16 @@ public class AuthenticationServiceImp implements AuthenticationService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
         return new AuthenticationResponse(jwt.getToken(), refreshToken.getToken(), user);
     }
+    public InvalidateTokenResult logout(String jwt) {
+        try {
+            this.tokenRepository.delete_by_token(jwt);
+
+            return new InvalidateTokenResult(true,"Session closed");
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error occurred trying to log out: " + e.getMessage());
+        }
+    }
     @Override
     public UserDto register(User user) {
         User newUser = this.userService.newUser(user);

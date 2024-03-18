@@ -93,10 +93,9 @@ public class AuthController {
     }
     @PreAuthorize("permitAll")
     @PostMapping("/logout")
-    public ResponseEntity<apiResponseDto> logout(@Valid @RequestHeader("Authorization") String token) {
+    public ResponseEntity<apiResponseDto> logout(@RequestHeader("Authorization") String token) {
         try {
-            InvalidateTokenResult result = this.jwtService.invalidateToken(token);
-
+            InvalidateTokenResult result = this.authenticationService.logout(token);
             if (result.isStatus()) {
                 return ResponseEntity.ok(new apiResponseDto("Session closed successfully"));
             } else {
@@ -114,9 +113,8 @@ public class AuthController {
                 .map(refreshTokenService::verifyExpiration)
                 .map(RefreshToken::getUser)
                 .map(user -> {
-                    Token token = jwtService.generateToken(user, authenticationService.generateExtraClaims(user));
                     jwtService.invalidateToken(user.getToken().getToken());
-                    jwtService.saveToken(token);
+                    Token token = jwtService.generateToken(user, authenticationService.generateExtraClaims(user));
                     refreshTokenService.deleteByUserId(user.getId());
                     RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getId());
                     return ResponseEntity.ok(new TokenRefreshResponse(token.getToken(), newRefreshToken.getToken()));

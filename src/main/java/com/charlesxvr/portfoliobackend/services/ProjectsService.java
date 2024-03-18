@@ -14,7 +14,7 @@ public interface ProjectsService {
     Projects getUserProjectByUserId(Long projId, String username);
 
     // Update an existing project
-    Projects updateProfessionalBackground(Projects project, Long projId, String username);
+    Projects updateProject(Projects project, Long projId, String username);
     // Delete a project by its ID
     Projects deleteProjectById(Long userId, Long projId);
 
