@@ -5,6 +5,7 @@ import com.charlesxvr.portfoliobackend.security.dto.*;
 import com.charlesxvr.portfoliobackend.security.models.entities.RefreshToken;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
+import com.charlesxvr.portfoliobackend.security.repository.TokenRepository;
 import com.charlesxvr.portfoliobackend.security.service.AuthenticationService;
 import com.charlesxvr.portfoliobackend.security.service.JwtService;
 import com.charlesxvr.portfoliobackend.security.service.RefreshTokenService;
@@ -32,17 +33,20 @@ public class AuthenticationServiceImp implements AuthenticationService {
     private final RefreshTokenService refreshTokenService;
     private final UserService userService;
     private final JwtService jwtService;
+    private final TokenRepository tokenRepository;
     @Autowired
     public AuthenticationServiceImp(
             AuthenticationManager authenticationManager,
             RefreshTokenService refreshTokenService,
             UserService userService,
-            JwtService jwtService
+            JwtService jwtService,
+            TokenRepository tokenRepository
     ) {
         this.authenticationManager = authenticationManager;
         this.refreshTokenService = refreshTokenService;
         this.userService = userService;
         this.jwtService = jwtService;
+        this.tokenRepository = tokenRepository;
     }
     JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
     EmailSender emailSender = new EmailSender(mailSender);
@@ -64,8 +68,12 @@ public class AuthenticationServiceImp implements AuthenticationService {
                 RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
                 return new AuthenticationResponse(existingToken.getToken(), refreshToken.getToken(), user);
             } else {
-                this.jwtService.invalidateToken(existingToken.getToken()); // Invalidate expired token
-                this.refreshTokenService.deleteByUserId(user.getId());
+                try {
+                    String jwt = existingToken.getToken();
+                    this.tokenRepository.delete_by_token(jwt);
+                } catch (Exception e) {
+                    throw new RuntimeException(e.getMessage());
+                }
             }
         }
         this.refreshTokenService.deleteByUserId(user.getId());

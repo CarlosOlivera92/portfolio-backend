@@ -135,7 +135,8 @@ public class CoursesServiceImp implements CoursesService {
     @Override
     public List<Courses> findAllByUserId(Long userId) {
         try {
-            return this.coursesRepository.findByUserInfo_Id(userId);
+            UserInfo userInfo = this.userInfoRepository.findByUser_Id(userId);
+            return this.coursesRepository.findByUserInfo_Id(userInfo.getId());
         } catch (Exception e) {
             throw new RuntimeException("Unexpected error while trying to fetch all courses: " + e.getMessage());
         }
