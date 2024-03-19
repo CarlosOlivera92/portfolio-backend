@@ -22,7 +22,7 @@ public class PermissionCheckController {
     @Autowired
     private AuthenticationServiceImp authenticationServiceImp;
 
-    @PreAuthorize("hasAuthority('UPDATE_SELF_USER')")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     @PostMapping("/edit-profile")
     public ResponseEntity<apiResponseDto> checkEditProfilePermission(@Valid @RequestHeader("Authorization") String token, @RequestBody pathUrlDto url) {
         try {

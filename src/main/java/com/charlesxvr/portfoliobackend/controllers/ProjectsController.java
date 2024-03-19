@@ -8,6 +8,7 @@ import com.charlesxvr.portfoliobackend.services.ProjectsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +29,7 @@ public class ProjectsController {
 
     // Get all projects for a user
     @GetMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<List<Projects>> getAllUserProjectsByUser(@PathVariable String username) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);
@@ -46,6 +48,7 @@ public class ProjectsController {
 
     // Create a new project
     @PostMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<Projects> createProject(@RequestBody Projects project, @PathVariable String username) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);
@@ -58,6 +61,7 @@ public class ProjectsController {
 
     // Get a specific project by ID
     @GetMapping("/{username}/item/{projectId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> getProjectById(@PathVariable Long projectId, @PathVariable String username) {
         try {
             Projects project = projectsService.getUserProjectByUserId(projectId, username);
@@ -72,6 +76,7 @@ public class ProjectsController {
 
     // Update an existing project
     @PutMapping("/{username}/item/{projectId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> updateProject(@RequestBody Projects project, @PathVariable Long projectId, @PathVariable String username) {
         try {
             Projects updatedProject = projectsService.updateProject(project, projectId, username);
@@ -83,6 +88,7 @@ public class ProjectsController {
 
     // Delete a project by ID
     @DeleteMapping("/{username}/item/{projectId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> deleteProject(@PathVariable String username, @PathVariable Long projectId) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);

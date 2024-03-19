@@ -22,10 +22,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class MainSecurity {
 
+    private final AuthenticationProvider authenticationProvider;
+    private final JwtAuthenticationFilter authenticationFilter;
+
     @Autowired
-    private AuthenticationProvider authenticationProvider;
-    @Autowired
-    private JwtAuthenticationFilter authenticationFilter;
+    public MainSecurity(
+            AuthenticationProvider authenticationProvider,
+            JwtAuthenticationFilter authenticationFilter
+    ) {
+        this.authenticationProvider = authenticationProvider;
+        this.authenticationFilter = authenticationFilter;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -36,6 +43,7 @@ public class MainSecurity {
                 .addFilterBefore(
                         authenticationFilter, UsernamePasswordAuthenticationFilter.class
                 );
+
         return http.build();
     }
     private static Customizer<AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry> builderRequestMatchers() {

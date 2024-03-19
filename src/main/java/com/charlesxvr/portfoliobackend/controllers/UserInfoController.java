@@ -28,6 +28,7 @@ public class UserInfoController {
         this.userInfoService = userInfoService;
     }
     @GetMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<UserInfo> getUserInfo(@PathVariable String username) {
         try {
             System.out.println(username);
@@ -43,6 +44,7 @@ public class UserInfoController {
         }
     }
     @PostMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> createUserInfo(@RequestBody @Valid UserInfo userInfo, @PathVariable String username) {
         System.out.println(username);
         try {
@@ -54,6 +56,7 @@ public class UserInfoController {
         }
     }
     @PutMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> updateEducationalBackground(@RequestBody UserInfo userInfo, @PathVariable String username) {
         try {
             UserInfo existingUserInfo = this.userInfoService.updateUserInfo(userInfo, username);

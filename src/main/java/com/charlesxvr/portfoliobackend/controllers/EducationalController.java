@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class EducationalController {
     }
 
     @GetMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<List<EducationalBackground>> getAllUserEducationalBackgroundsByUser(@PathVariable String username) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);
@@ -43,6 +45,7 @@ public class EducationalController {
         }
     }
     @PutMapping("/{username}/item/{educationalId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> updateEducationalBackground(@RequestBody EducationalBackground educationalBackground, @PathVariable Long educationalId, @PathVariable String username) {
         try {
             EducationalBackground existingEducationalBackground = this.educationalService.updateEducationalBackground(educationalBackground, educationalId, username);
@@ -52,6 +55,7 @@ public class EducationalController {
         }
     }
     @PostMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<EducationalBackground> createEducationalBackground(@RequestBody EducationalBackground educationalBackground, @PathVariable String username) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);
@@ -65,6 +69,7 @@ public class EducationalController {
         }
     }
     @GetMapping("/{username}/item/{eduId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> getEducationBackgroundById(@PathVariable Long eduId, @PathVariable String username) {
         try {
             EducationalBackground educationalBackground = this.educationalService.getUserEducationalBackgroundById(eduId, username);
@@ -77,6 +82,7 @@ public class EducationalController {
         }
     }
     @DeleteMapping("/{username}/item/{eduId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> deleteEducationalItem(@PathVariable String username, @PathVariable Long eduId) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);
