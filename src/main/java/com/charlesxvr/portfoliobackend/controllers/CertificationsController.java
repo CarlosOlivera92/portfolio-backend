@@ -5,6 +5,7 @@ import com.charlesxvr.portfoliobackend.services.CertificationsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class CertificationsController {
         this.certificationsService = certificationsService;
     }
     @GetMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<List<Certifications>> getAllCertificationsByUser(@PathVariable String username) {
         try {
             List<Certifications> certificationsList = this.certificationsService.getAllByUserInfo(username);
@@ -30,6 +32,7 @@ public class CertificationsController {
         }
     }
     @GetMapping("/{username}/courses/{courseId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<List<Certifications>> getAllCertificationsByCourse(@PathVariable String username, @PathVariable Long courseId) {
         try {
             List<Certifications> certificationsList = this.certificationsService.getAllByCourseId(courseId, username);
@@ -39,6 +42,7 @@ public class CertificationsController {
         }
     }
     @GetMapping("/{username}/educational/{educationalId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<List<Certifications>> getAllCertificationsByEducational(@PathVariable String username, @PathVariable Long educationalId) {
         try {
             List<Certifications> certificationsList = this.certificationsService.getAllByEducationalId(educationalId, username);
@@ -48,6 +52,7 @@ public class CertificationsController {
         }
     }
     @PostMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<Certifications> createNewCertification(@PathVariable String username, @RequestBody Certifications certification) {
         try {
             Certifications newCertification = this.certificationsService.createCertification(certification, username);
@@ -57,6 +62,7 @@ public class CertificationsController {
         }
     }
     @PostMapping("/{username}/courses/{courseId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<Certifications> createNewCertificationForExistingCourse(@PathVariable String username, @PathVariable Long courseId, @RequestBody Certifications certification) {
         try {
             Certifications newCertification = this.certificationsService.createCertificationByCourseId(certification, username, courseId);
@@ -66,6 +72,7 @@ public class CertificationsController {
         }
     }
     @PostMapping("/{username}/educational/{educationalId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<Certifications> createNewCertification(@PathVariable String username, @PathVariable Long educationalId, @RequestBody Certifications certification) {
         try {
             Certifications newCertification = this.certificationsService.createCertificationByEducationalId(certification, username, educationalId);
@@ -75,6 +82,7 @@ public class CertificationsController {
         }
     }
     @PutMapping("/{username}/{certificationId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<Certifications> updateCertificationByUser(@PathVariable String username, @PathVariable Long certificationId, @RequestBody Certifications certification) {
         try {
             Certifications updatedCertification = this.certificationsService.updateCertificationByUserInfo(certification, username, certificationId);
@@ -84,6 +92,7 @@ public class CertificationsController {
         }
     }
     @PutMapping("/{username}/courses/{courseId}/{certificationId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<Certifications> updateCertificationByCourse(@PathVariable String username, @PathVariable Long courseId, @PathVariable Long certificationId, @RequestBody Certifications certification) {
         try {
             Certifications updatedCertification = this.certificationsService.updateCertificationByCourse(certification, courseId, username, certificationId);
@@ -93,6 +102,7 @@ public class CertificationsController {
         }
     }
     @PutMapping("/{username}/educational/{educationalId}/{certificationId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<Certifications> updateCertificationByEducational(@PathVariable String username, @PathVariable Long certificationId, @PathVariable Long educationalId, @RequestBody Certifications certification) {
         try {
             Certifications updatedCertification = this.certificationsService.updateCertificationByEducation(certification, educationalId, username, certificationId );
@@ -102,6 +112,7 @@ public class CertificationsController {
         }
     }
     @DeleteMapping("/{username}/{certificationId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<Long> deleteCertificationByUser(@PathVariable String username, @PathVariable Long certificationId) {
         try {
             Long deletedRows = this.certificationsService.deleteOneByUserInfoAndId(username, certificationId);
@@ -111,6 +122,7 @@ public class CertificationsController {
         }
     }
     @DeleteMapping("/{username}/courses/{courseId}/{certificationId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<Long> deleteCertificationByCourse(@PathVariable String username, @PathVariable Long certificationId, @PathVariable Long courseId) {
         try {
             Long deletedRows = this.certificationsService.deleteOneByCourseAndId(username, courseId, certificationId);
@@ -120,6 +132,7 @@ public class CertificationsController {
         }
     }
     @DeleteMapping("/{username}/educational/{educationalId}/{certificationId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<Long> deleteCertificationByEducational(@PathVariable String username, @PathVariable Long certificationId, @PathVariable Long educationalId) {
         try {
             Long deletedRows = this.certificationsService.deleteOneByEducationalAndId(username,educationalId, certificationId);

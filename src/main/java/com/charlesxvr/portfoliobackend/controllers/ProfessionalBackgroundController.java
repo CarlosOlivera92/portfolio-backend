@@ -8,6 +8,7 @@ import com.charlesxvr.portfoliobackend.services.ProfessionalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class ProfessionalBackgroundController {
 
 
     @GetMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<List<ProfessionalBackground>> getAllUserProfessionalBackgroundsByUser(@PathVariable String username) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);
@@ -43,6 +45,7 @@ public class ProfessionalBackgroundController {
     }
 
     @PutMapping("/{username}/item/{professionalId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> updateProfessionalBackground(@RequestBody ProfessionalBackground professionalBackground, @PathVariable Long professionalId, @PathVariable String username) {
         try {
             ProfessionalBackground existingProfessionalBackground = this.professionalService.updateProfessionalBackground(professionalBackground, professionalId, username);
@@ -53,6 +56,7 @@ public class ProfessionalBackgroundController {
     }
 
     @PostMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<ProfessionalBackground> createProfessionalBackground(@RequestBody ProfessionalBackground professionalBackground, @PathVariable String username) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);
@@ -67,6 +71,7 @@ public class ProfessionalBackgroundController {
     }
 
     @GetMapping("/{username}/item/{profId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> getProfessionalBackgroundById(@PathVariable Long profId, @PathVariable String username) {
         try {
             ProfessionalBackground professionalBackground = this.professionalService.getUserProfessionalBackgroundById(profId, username);
@@ -80,6 +85,7 @@ public class ProfessionalBackgroundController {
     }
 
     @DeleteMapping("/{username}/item/{profId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> deleteProfessionalBackground(@PathVariable String username, @PathVariable Long profId) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);

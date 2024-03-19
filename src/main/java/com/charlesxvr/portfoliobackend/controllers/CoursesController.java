@@ -8,6 +8,7 @@ import com.charlesxvr.portfoliobackend.services.CoursesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +28,8 @@ public class CoursesController {
     }
 
     @GetMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
+
     public ResponseEntity<List<Courses>> getAllUserCoursesByUser(@PathVariable String username) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);
@@ -41,6 +44,7 @@ public class CoursesController {
     }
 
     @PutMapping("/{username}/item/{courseId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> updateCourse(@RequestBody Courses course, @PathVariable Long courseId, @PathVariable String username) {
         try {
             Courses existingCourse = this.courseService.updateCourse(course, courseId, username);
@@ -51,6 +55,7 @@ public class CoursesController {
     }
 
     @PostMapping("/{username}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<Courses> createCourse(@RequestBody Courses course, @PathVariable String username) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);
@@ -65,6 +70,7 @@ public class CoursesController {
     }
 
     @GetMapping("/{username}/item/{courseId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> getCourseById(@PathVariable Long courseId, @PathVariable String username) {
         try {
             Courses course = this.courseService.getUserCourseById(courseId, username);
@@ -77,6 +83,7 @@ public class CoursesController {
         }
     }
     @DeleteMapping("/{username}/item/{courseId}")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> deleteCourse(@PathVariable String username, @PathVariable Long courseId) {
         try {
             Optional<User> existingUser = this.userService.findByUsername(username);

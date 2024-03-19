@@ -74,7 +74,7 @@ public class JwtServiceImp implements JwtService {
     @Override
     public boolean validateToken(String token) {
         try {
-            Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+            Key key = generateKey();
 
             //Parse token and verify the sign
             Claims claims = Jwts.parserBuilder()
@@ -86,11 +86,12 @@ public class JwtServiceImp implements JwtService {
             // Check if the token is expired
             Date expirationDate = claims.getExpiration();
             Date now = new Date();
+
             // Token expired
             return !expirationDate.before(now);
 
-        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException | SignatureException | IllegalArgumentException e) {
-            return false;
+        } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException  | IllegalArgumentException e) {
+            throw new RuntimeException(e.getMessage());
         }
     }
     @Override

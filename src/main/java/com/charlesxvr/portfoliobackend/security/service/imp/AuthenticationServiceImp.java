@@ -65,6 +65,7 @@ public class AuthenticationServiceImp implements AuthenticationService {
         Token existingToken = jwtService.findTokenByUserId(user.getId());
         if (existingToken != null) {
             if (jwtService.validateToken(existingToken.getToken())) {
+                this.refreshTokenService.deleteByUserId(user.getId());
                 RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
                 return new AuthenticationResponse(existingToken.getToken(), refreshToken.getToken(), user);
             } else {
