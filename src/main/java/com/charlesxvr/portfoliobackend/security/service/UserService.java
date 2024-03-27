@@ -20,10 +20,11 @@ public interface UserService {
     User newUser(User user);
     User updateUser(Long id, User user);
     Optional<User> findByUsername(String username);
+    Optional<UserDto> findUserAndInfoByUsername(String username);
     User findByEmail(String email);
     Optional<User> findByResetPasswordToken(String token);
     String forgotPassword(String email);
     String resetPassword(String token, String password);
     boolean isTokenExpired(LocalDateTime tokenCreationDate);
-    void deleteUser(Long id);
+    void deleteUser(String username);
 }

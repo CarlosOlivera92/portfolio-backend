@@ -91,7 +91,7 @@ public class JwtServiceImp implements JwtService {
             return !expirationDate.before(now);
 
         } catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException  | IllegalArgumentException e) {
-            throw new RuntimeException(e.getMessage());
+            return false;
         }
     }
     @Override
@@ -109,7 +109,8 @@ public class JwtServiceImp implements JwtService {
                     Token tokenResponseBdd = tokenRepository.findByUser_Id(user.getId());
                     RefreshToken refreshTokenBbdd = refreshTokenRepository.findByUser_Id(user.getId());
                     if (tokenResponseBdd != null) {
-                        tokenRepository.deleteById(tokenResponseBdd.getId());
+                        this.tokenRepository.delete_by_token(tokenResponseBdd.getToken());
+
                         if (refreshTokenBbdd != null) {
                             refreshTokenRepository.deleteById(refreshTokenBbdd.getId());
                         }

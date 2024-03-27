@@ -1,12 +1,11 @@
 package com.charlesxvr.portfoliobackend.security.dto;
 
+import com.charlesxvr.portfoliobackend.dto.UserInfoDTO;
+import com.charlesxvr.portfoliobackend.models.entities.UserInfo;
 import com.charlesxvr.portfoliobackend.security.enums.Role;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
@@ -18,12 +17,10 @@ public class UserDto {
     private Long phoneNumber;
     private String birthday;
     private String username;
-    private String profilePic;
-
     private Role role;
+    private UserInfoDTO userInfo;
 
-
-    public UserDto(User user) {
+    public UserDto(User user, UserInfoDTO userInfo) {
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
         this.email = user.getEmail();
@@ -31,6 +28,7 @@ public class UserDto {
         this.birthday = user.getBirthday().toString();
         this.username = user.getUsername();
         this.role = user.getRole();
+        this.userInfo = userInfo;
     }
 
     public static class TokenDTO {

@@ -44,9 +44,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Extract JWT
         String jwt = authHeader.split(" ")[1];
 
-        // Check if the request is for a restricted endpoint, if so, perform username validation
         String requestURI = request.getRequestURI();
-        System.out.println(requestURI);
+        if (requestURI.contains("/logout")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        // Check if the request is for a restricted endpoint, if so, perform username validation
         if (isRestrictedEndpoint(requestURI)) {
             // Continue with username validation
             boolean isTokenValid = jwtServiceImp.validateToken(jwt);
@@ -88,6 +91,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authToken);
             // Continue with filter chain
             filterChain.doFilter(request, response);
+        } else {
+            this.tokenRepository.delete_by_token(jwt);
         }
     }
 

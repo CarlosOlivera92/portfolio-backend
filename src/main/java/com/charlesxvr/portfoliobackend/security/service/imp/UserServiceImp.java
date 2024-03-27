@@ -1,14 +1,19 @@
 package com.charlesxvr.portfoliobackend.security.service.imp;
 
+import com.charlesxvr.portfoliobackend.dto.UserInfoDTO;
 import com.charlesxvr.portfoliobackend.exceptions.UsernameAlreadyExistsException;
 import com.charlesxvr.portfoliobackend.javamail.EmailSender;
+import com.charlesxvr.portfoliobackend.models.entities.UserInfo;
+import com.charlesxvr.portfoliobackend.repositories.UserInfoRepository;
 import com.charlesxvr.portfoliobackend.security.dto.UserDto;
 import com.charlesxvr.portfoliobackend.security.dto.apiResponseDto;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
+import com.charlesxvr.portfoliobackend.security.repository.RefreshTokenRepository;
 import com.charlesxvr.portfoliobackend.security.repository.TokenRepository;
 import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.security.service.UserService;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
@@ -16,10 +21,7 @@ import org.springframework.stereotype.Service;
 import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class UserServiceImp implements UserService {
@@ -31,14 +33,18 @@ public class UserServiceImp implements UserService {
     private UserRepository userRepository;
     @Autowired
     private TokenRepository tokenRepository;
-
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+    @Autowired
+    private UserInfoRepository userInfoRepository;
     @Override
     public List<UserDto> getUsers() {
         List<User> userList = this.userRepository.findAll();
         if (!userList.isEmpty()) {
             List<UserDto> userDtoList = new ArrayList<>();
             for (User user : userList) {
-                userDtoList.add(new UserDto(user));
+                UserInfoDTO userInfoDTO = new UserInfoDTO(user.getUserInfo());
+                userDtoList.add(new UserDto(user, userInfoDTO));
             }
             return userDtoList;
         } else {
@@ -82,8 +88,27 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    @Transactional
     public Optional<User> findByUsername(String username) {
         return this.userRepository.findByUsername(username);
+    }
+
+    @Override
+    @Transactional
+    public Optional<UserDto> findUserAndInfoByUsername(String username) {
+        try {
+            Optional<User> existingUser = this.userRepository.findByUsername(username);
+            if (existingUser.isEmpty()) {
+                throw new RuntimeException("User not found");
+            }
+            User user = existingUser.get();
+            UserInfo userInfo = user.getUserInfo();
+            UserInfoDTO userInfoDTO = new UserInfoDTO(user.getUserInfo());
+            UserDto userDto = new UserDto(user, userInfoDTO);
+            return Optional.of(userDto);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     @Override
@@ -158,7 +183,19 @@ public class UserServiceImp implements UserService {
         return token;
     }
     @Override
-    public void deleteUser(Long id) {
-        this.userRepository.deleteById(id);
+    @Transactional
+    public void deleteUser(String username) {
+        try {
+            Optional<User> existingUser = this.userRepository.findByUsername(username);
+            if (existingUser.isEmpty()) {
+                throw new RuntimeException("No se ha encontrado al usuario");
+            }
+            this.refreshTokenRepository.deleteByUserId(existingUser.get().getId());
+            this.tokenRepository.deleteByUser(existingUser.get());
+            userInfoRepository.deleteByUser(existingUser.get());
+            this.userRepository.deleteByUsername(existingUser.get().getUsername());
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 }

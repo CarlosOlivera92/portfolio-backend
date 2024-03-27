@@ -6,6 +6,7 @@ import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.repository.RefreshTokenRepository;
 import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.security.service.RefreshTokenService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class RefreshTokenServiceImp implements RefreshTokenService {
     }
 
     @Override
+    @Transactional
     public Optional<RefreshToken> findByToken(String token) {
         return refreshTokenRepository.findByToken(token);
     }
