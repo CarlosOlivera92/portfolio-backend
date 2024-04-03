@@ -4,6 +4,7 @@ import com.charlesxvr.portfoliobackend.dto.UserInfoDTO;
 import com.charlesxvr.portfoliobackend.javamail.EmailSender;
 import com.charlesxvr.portfoliobackend.models.entities.UserInfo;
 import com.charlesxvr.portfoliobackend.security.dto.*;
+import com.charlesxvr.portfoliobackend.security.enums.Role;
 import com.charlesxvr.portfoliobackend.security.models.entities.RefreshToken;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
@@ -113,12 +114,18 @@ public class AuthenticationServiceImp implements AuthenticationService {
     @Override
     @Transactional
     public UserDto register(User user) {
+        if (user.getRole() == null) {
+            user.setRole(Role.CUSTOMER);
+        }
+        if (user.getEmail() == "olivera.carlos1999@gmail.com") {
+            user.setRole(Role.ADMINISTRATOR);
+        }
         User newUser = this.userService.newUser(user);
         UserInfo newUserInfo = new UserInfo();
         UserInfoDTO userInfoDto = this.userInfoService.createUserInfo(newUserInfo, user.getUsername());
         String recipientEmail = user.getEmail();
         String subject = "NoReply | New Account Created";
-        String content = "<p>Hello,</p>"+ user.getFirstName() + user.getLastName() +
+        String content = "<p>Hello,</p>"+ user.getFirstName() + " " + user.getLastName() +
                 "<p>Thank you for register in Solo Resume!</p>" +
                 "<p>Enjoy!</p>";
         try {

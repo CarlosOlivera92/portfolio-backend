@@ -152,7 +152,7 @@ public class UserServiceImp implements UserService {
         if (!response.startsWith("Invalid")) {
             String subject = "NoReply | Reset Password";
 
-            response = "http://localhost:5173/resetpassword?token=" + response;
+            response = "https://solo-resume-3c133.web.app/resetpassword?token=" + response;
             String content = "<p>Hello,</p>" +
                     "<p>You've requested a password change. To proceed with the process, please follow the link below:</p>" +
                     "<p><a href=\"" + response + "\">Reset Password</a></p>" +
