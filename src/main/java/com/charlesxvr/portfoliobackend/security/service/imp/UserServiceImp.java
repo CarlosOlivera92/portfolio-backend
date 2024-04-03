@@ -1,20 +1,28 @@
 package com.charlesxvr.portfoliobackend.security.service.imp;
 
 import com.charlesxvr.portfoliobackend.dto.UserInfoDTO;
+import com.charlesxvr.portfoliobackend.exceptions.TokenRefreshException;
 import com.charlesxvr.portfoliobackend.exceptions.UsernameAlreadyExistsException;
 import com.charlesxvr.portfoliobackend.javamail.EmailSender;
 import com.charlesxvr.portfoliobackend.models.entities.UserInfo;
 import com.charlesxvr.portfoliobackend.repositories.UserInfoRepository;
 import com.charlesxvr.portfoliobackend.security.dto.UserDto;
 import com.charlesxvr.portfoliobackend.security.dto.apiResponseDto;
+import com.charlesxvr.portfoliobackend.security.models.TokenRefreshResponse;
+import com.charlesxvr.portfoliobackend.security.models.entities.RefreshToken;
+import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.repository.RefreshTokenRepository;
 import com.charlesxvr.portfoliobackend.security.repository.TokenRepository;
 import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
+import com.charlesxvr.portfoliobackend.security.service.AuthenticationService;
+import com.charlesxvr.portfoliobackend.security.service.JwtService;
+import com.charlesxvr.portfoliobackend.security.service.RefreshTokenService;
 import com.charlesxvr.portfoliobackend.security.service.UserService;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +45,12 @@ public class UserServiceImp implements UserService {
     private RefreshTokenRepository refreshTokenRepository;
     @Autowired
     private UserInfoRepository userInfoRepository;
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+    @Autowired
+    private JwtService jwtService;
+
+
     @Override
     public List<UserDto> getUsers() {
         List<User> userList = this.userRepository.findAll();
@@ -197,5 +211,43 @@ public class UserServiceImp implements UserService {
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    @Override
+    @Transactional
+    public TokenRefreshResponse refhreshToken(String refreshToken) {
+        try {
+            Optional<RefreshToken> storedRefreshToken = refreshTokenService.findByToken(refreshToken);
+            if (storedRefreshToken.isEmpty()) {
+                throw new RuntimeException("Error: Requested refresh token not in database");
+            }
+            Optional<RefreshToken> verifiedToken = refreshTokenService.verifyExpiration(storedRefreshToken);
+            if (verifiedToken.isEmpty()) {
+                throw new RuntimeException("Invalid token");
+            }
+            User tokenOwner = verifiedToken.get().getUser();
+            Token userToken = tokenOwner.getToken();
+            if (userToken == null) {
+                Token newToken = jwtService.generateToken(tokenOwner, generateExtraClaims(tokenOwner));
+                this.refreshTokenService.deleteByUserId(tokenOwner.getId());
+                RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(tokenOwner.getId());
+                return new TokenRefreshResponse(newToken.getToken(), newRefreshToken.getToken());
+            }
+            this.jwtService.invalidateToken(userToken.getToken());
+            Token newToken = jwtService.generateToken(tokenOwner, generateExtraClaims(tokenOwner));
+            this.refreshTokenService.deleteByUserId(tokenOwner.getId());
+            RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(tokenOwner.getId());
+            return new TokenRefreshResponse(newToken.getToken(), newRefreshToken.getToken());
+
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+    private Map<String, Object> generateExtraClaims(User user) {
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("name", user.getFirstName());
+        extraClaims.put("role", user.getRole());
+        extraClaims.put("permissions", user.getAuthorities());
+        return extraClaims;
     }
 }

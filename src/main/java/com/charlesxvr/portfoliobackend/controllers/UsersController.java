@@ -49,7 +49,7 @@ public class UsersController {
     public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
         try {
             Optional<UserDto> userDto = this.userService.findUserAndInfoByUsername(username);
-            return ResponseEntity.ok(userDto);
+            return ResponseEntity.ok().body(userDto);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred: " + e.getMessage());
         }
@@ -64,17 +64,17 @@ public class UsersController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
-    @PutMapping("/profile-pic/{username}")
-    public ResponseEntity<String> updateProfilePic(MultipartFile file, @PathVariable String username) {
+
+    @PutMapping("/profile-pic/{username}/file")
+    public ResponseEntity<?> updateProfilePic(@RequestBody MultipartFile file, @PathVariable String username) {
         try {
-            String message = userInfoService.updateProfilePic(file, username);
-            return new ResponseEntity<>(message, HttpStatus.OK);
+            userInfoService.updateProfilePic(file, username);
+            return ResponseEntity.ok().body("Profile pic updated successfully!");
         } catch (Exception e) {
             return new ResponseEntity<>("Failed to update profile pic: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
+
     @GetMapping("/profile-pic/{username}")
     public ResponseEntity<?> getProfilePic(@PathVariable String username) {
         try {

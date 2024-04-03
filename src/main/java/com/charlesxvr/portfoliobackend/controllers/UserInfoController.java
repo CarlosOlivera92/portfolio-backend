@@ -31,9 +31,7 @@ public class UserInfoController {
     @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
     public ResponseEntity<?> getUserInfo(@PathVariable String username) {
         try {
-            System.out.println(username);
             UserInfo userInfo = this.userInfoService.getUserInfo(username);
-            System.out.println(userInfo);
 
             return userInfo != null
                     ? ResponseEntity.ok(userInfo)  // Return 200 with user info if found

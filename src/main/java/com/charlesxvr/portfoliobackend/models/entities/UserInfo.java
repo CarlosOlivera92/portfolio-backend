@@ -18,9 +18,10 @@ public class UserInfo {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Lob
-    private String profilePicUrl;
+    private byte[] profilePicUrl;
     private String bannerPicUrl;
     private String jobPosition;
+    @Column(length = 1000)
     private String aboutMe;
     private String linkedinProfileUrl;
     private String githubProfileUrl;

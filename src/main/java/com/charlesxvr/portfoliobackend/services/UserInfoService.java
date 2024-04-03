@@ -13,5 +13,5 @@ public interface UserInfoService {
     UserInfoDTO createUserInfo(UserInfo userInfo, String username);
     UserInfo updateUserInfo(UserInfo userInfo, String username);
     String getProfilePic (String username);
-    String updateProfilePic(MultipartFile file, String username);
+    void updateProfilePic(MultipartFile file, String username);
 }

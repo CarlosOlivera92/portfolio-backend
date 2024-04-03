@@ -111,10 +111,11 @@ public class AuthenticationServiceImp implements AuthenticationService {
         }
     }
     @Override
+    @Transactional
     public UserDto register(User user) {
         User newUser = this.userService.newUser(user);
         UserInfo newUserInfo = new UserInfo();
-        this.userInfoService.createUserInfo(newUserInfo, user.getUsername());
+        UserInfoDTO userInfoDto = this.userInfoService.createUserInfo(newUserInfo, user.getUsername());
         String recipientEmail = user.getEmail();
         String subject = "NoReply | New Account Created";
         String content = "<p>Hello,</p>"+ user.getFirstName() + user.getLastName() +
@@ -126,7 +127,7 @@ public class AuthenticationServiceImp implements AuthenticationService {
         } catch (MessagingException | UnsupportedEncodingException e) {
             System.out.println("Failed to send email. Error: " + e.getMessage());
         }
-        return new UserDto(newUser, new UserInfoDTO(newUser.getUserInfo()));
+        return new UserDto(newUser, userInfoDto);
     }
     @Override
     public boolean checkEditPermission(String token, pathUrlDto url) {

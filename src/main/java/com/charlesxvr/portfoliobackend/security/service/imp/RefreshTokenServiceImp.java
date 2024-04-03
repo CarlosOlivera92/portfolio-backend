@@ -42,10 +42,13 @@ public class RefreshTokenServiceImp implements RefreshTokenService {
     }
 
     @Override
-    public RefreshToken verifyExpiration(RefreshToken token) {
-        if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
-            refreshTokenRepository.delete(token);
-            throw new TokenRefreshException(token.getToken(), "Invalid Token");
+    public Optional<RefreshToken> verifyExpiration(Optional<RefreshToken> token) {
+        if (token.isEmpty()) {
+            throw new RuntimeException("Unable to find refresh token");
+        }
+        if (token.get().getExpiryDate().compareTo(Instant.now()) < 0) {
+            refreshTokenRepository.deleteByToken(token.get().getToken());
+            throw new TokenRefreshException(token.get().getToken(), "Invalid Token");
         }
         return token;
     }

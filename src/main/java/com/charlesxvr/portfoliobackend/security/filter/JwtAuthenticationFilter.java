@@ -45,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String jwt = authHeader.split(" ")[1];
 
         String requestURI = request.getRequestURI();
-        if (requestURI.contains("/logout")) {
+        if (requestURI.contains("/logout") || requestURI.contains("/refreshtoken")) {
             filterChain.doFilter(request, response);
             return;
         }

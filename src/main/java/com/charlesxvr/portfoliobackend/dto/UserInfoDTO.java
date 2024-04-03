@@ -14,6 +14,8 @@ public class UserInfoDTO {
     private String jobPosition;
     private String aboutMe;
     private String address;
+    private String linkedinProfileUrl;
+    private String githubProfileUrl;
     private List<EducationalBackground> educationalBackgrounds;
     private List<ProfessionalBackground> professionalBackgrounds;
     private List<Courses> courses;
@@ -28,6 +30,8 @@ public class UserInfoDTO {
         this.address = userInfo.getAddress();
         this.educationalBackgrounds = userInfo.getEducationalBackgrounds();
         this.professionalBackgrounds = userInfo.getProfessionalBackgrounds();
+        this.linkedinProfileUrl = userInfo.getLinkedinProfileUrl();
+        this.githubProfileUrl = userInfo.getGithubProfileUrl();
         this.courses = userInfo.getCourses();
         this.certifications = userInfo.getCertifications();
         this.projects = userInfo.getProjects();

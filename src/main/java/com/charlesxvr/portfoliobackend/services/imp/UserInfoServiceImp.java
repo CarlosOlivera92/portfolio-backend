@@ -92,44 +92,35 @@ public class UserInfoServiceImp implements UserInfoService {
     @Transactional
     public String getProfilePic(String username) {
         try {
-            Optional<User> existingUser = this.userRepository.findByUsername(username);
-            if (existingUser.isEmpty()){
-                throw new RuntimeException("User not found");
-            }
-            UserInfo userInfo = existingUser.get().getUserInfo();
-            String profilePicUrl = userInfo.getProfilePicUrl();
-            if (profilePicUrl == null ) {
-                throw new RuntimeException("Image not found");
-            }
-
-            return profilePicUrl;
+           Optional<User> user = userRepository.findByUsername(username);
+           if(user.isEmpty()){
+               throw new RuntimeException("User does not exist");
+           }
+           return Base64.getEncoder().encodeToString(user.get().getUserInfo().getProfilePicUrl());
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
     }
 
-    @Override
     @Transactional
-    public String updateProfilePic(MultipartFile file, String username) {
+    @Override
+    public void updateProfilePic(MultipartFile file, String username) {
         try {
-            Optional<User> existingUser = this.userRepository.findByUsername(username);
-            if (existingUser.isEmpty()) {
-                throw new RuntimeException("User not found in database");
-            }
-            // Convertir el archivo a bytes
-            byte[] fileBytes = file.getBytes();
-            String fileBase = Base64.getEncoder().encodeToString(fileBytes);
-            // Actualizar la URL de la foto de perfil en la base de datos
-            UserInfo userInfo = userInfoRepository.findByUser_Id(existingUser.get().getId());
-            userInfo.setProfilePicUrl(fileBase);
-            userInfoRepository.save(userInfo);
+            Optional<User> optionalUser = userRepository.findByUsername(username);
+            User user = optionalUser.orElseThrow(() -> new RuntimeException("User does not exist"));
 
-            return "Profile pic updated successfully!";
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Error occurred trying to save the image: " + e.getMessage());
+            if (file.isEmpty()) {
+                throw new RuntimeException("File is empty");
+            }
+
+            UserInfo userInfo = user.getUserInfo();
+
+            byte[] profilePicBytes = file.getBytes();
+            userInfo.setProfilePicUrl(profilePicBytes);
+
+            userRepository.save(user);
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException("Error occurred while processing file", e);
         }
     }
-
 }
