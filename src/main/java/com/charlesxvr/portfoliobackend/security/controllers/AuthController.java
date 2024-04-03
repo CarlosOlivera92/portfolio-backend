@@ -11,14 +11,8 @@ import com.charlesxvr.portfoliobackend.security.service.AuthenticationService;
 import com.charlesxvr.portfoliobackend.security.service.JwtService;
 import com.charlesxvr.portfoliobackend.security.service.RefreshTokenService;
 import com.charlesxvr.portfoliobackend.security.service.UserService;
-import com.charlesxvr.portfoliobackend.security.service.imp.AuthenticationServiceImp;
-import com.charlesxvr.portfoliobackend.security.service.imp.JwtServiceImp;
-import com.charlesxvr.portfoliobackend.security.service.imp.RefreshTokenServiceImp;
-import com.charlesxvr.portfoliobackend.security.service.imp.UserServiceImp;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,7 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("api/auth")
@@ -107,17 +100,13 @@ public class AuthController {
     }
     @PreAuthorize("permitAll")
     @PostMapping("/refreshtoken")
-    public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest request){
-        String requestRefreshToken = request.getRefreshToken();
-        return refreshTokenService.findByToken(requestRefreshToken)
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUser)
-                .map(user -> {
-                    jwtService.invalidateToken(user.getToken().getToken());
-                    Token token = jwtService.generateToken(user, authenticationService.generateExtraClaims(user));
-                    refreshTokenService.deleteByUserId(user.getId());
-                    RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getId());
-                    return ResponseEntity.ok(new TokenRefreshResponse(token.getToken(), newRefreshToken.getToken()));
-                }).orElseThrow( ()  -> new TokenRefreshException(requestRefreshToken, "Refresh token not in database"));
+    public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
+        try {
+            String requestRefreshToken = request.getRefreshToken();
+            TokenRefreshResponse tokenRefreshResponse = this.userService.refhreshToken(requestRefreshToken);
+            return ResponseEntity.ok().body(tokenRefreshResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unable to refresh the token provided: " + e.getMessage());
+        }
     }
 }

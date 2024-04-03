@@ -6,6 +6,7 @@ import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.repository.RefreshTokenRepository;
 import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.security.service.RefreshTokenService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -35,15 +36,19 @@ public class RefreshTokenServiceImp implements RefreshTokenService {
     }
 
     @Override
+    @Transactional
     public Optional<RefreshToken> findByToken(String token) {
         return refreshTokenRepository.findByToken(token);
     }
 
     @Override
-    public RefreshToken verifyExpiration(RefreshToken token) {
-        if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
-            refreshTokenRepository.delete(token);
-            throw new TokenRefreshException(token.getToken(), "Invalid Token");
+    public Optional<RefreshToken> verifyExpiration(Optional<RefreshToken> token) {
+        if (token.isEmpty()) {
+            throw new RuntimeException("Unable to find refresh token");
+        }
+        if (token.get().getExpiryDate().compareTo(Instant.now()) < 0) {
+            refreshTokenRepository.deleteByToken(token.get().getToken());
+            throw new TokenRefreshException(token.get().getToken(), "Invalid Token");
         }
         return token;
     }

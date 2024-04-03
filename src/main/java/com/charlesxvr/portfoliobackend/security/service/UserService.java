@@ -2,6 +2,8 @@ package com.charlesxvr.portfoliobackend.security.service;
 
 import com.charlesxvr.portfoliobackend.security.dto.UserDto;
 import com.charlesxvr.portfoliobackend.security.dto.apiResponseDto;
+import com.charlesxvr.portfoliobackend.security.models.TokenRefreshResponse;
+import com.charlesxvr.portfoliobackend.security.models.entities.RefreshToken;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import org.springframework.cglib.core.Local;
@@ -20,10 +22,12 @@ public interface UserService {
     User newUser(User user);
     User updateUser(Long id, User user);
     Optional<User> findByUsername(String username);
+    Optional<UserDto> findUserAndInfoByUsername(String username);
     User findByEmail(String email);
     Optional<User> findByResetPasswordToken(String token);
     String forgotPassword(String email);
     String resetPassword(String token, String password);
     boolean isTokenExpired(LocalDateTime tokenCreationDate);
-    void deleteUser(Long id);
+    void deleteUser(String username);
+    TokenRefreshResponse refhreshToken (String refreshToken);
 }

@@ -1,6 +1,7 @@
 package com.charlesxvr.portfoliobackend.security.repository;
 
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
+import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -23,4 +24,9 @@ public interface TokenRepository extends JpaRepository<Token, Long> {
     @Modifying
     @Query("delete from Token t where t.token = ?1")
     int delete_by_token(String token);
+
+    @Transactional
+    @Modifying
+    @Query("delete from Token t where t.user = ?1")
+    int deleteByUser(User user);
 }

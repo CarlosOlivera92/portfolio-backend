@@ -1,15 +1,19 @@
 package com.charlesxvr.portfoliobackend.security.service.imp;
 
+import com.charlesxvr.portfoliobackend.dto.UserInfoDTO;
 import com.charlesxvr.portfoliobackend.javamail.EmailSender;
+import com.charlesxvr.portfoliobackend.models.entities.UserInfo;
 import com.charlesxvr.portfoliobackend.security.dto.*;
 import com.charlesxvr.portfoliobackend.security.models.entities.RefreshToken;
 import com.charlesxvr.portfoliobackend.security.models.entities.Token;
 import com.charlesxvr.portfoliobackend.security.models.entities.User;
 import com.charlesxvr.portfoliobackend.security.repository.TokenRepository;
+import com.charlesxvr.portfoliobackend.security.repository.UserRepository;
 import com.charlesxvr.portfoliobackend.security.service.AuthenticationService;
 import com.charlesxvr.portfoliobackend.security.service.JwtService;
 import com.charlesxvr.portfoliobackend.security.service.RefreshTokenService;
 import com.charlesxvr.portfoliobackend.security.service.UserService;
+import com.charlesxvr.portfoliobackend.services.UserInfoService;
 import io.jsonwebtoken.Claims;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
@@ -32,21 +36,27 @@ public class AuthenticationServiceImp implements AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
     private final UserService userService;
+    private final UserInfoService userInfoService;
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
+    private final UserRepository userRepository;
     @Autowired
     public AuthenticationServiceImp(
             AuthenticationManager authenticationManager,
             RefreshTokenService refreshTokenService,
             UserService userService,
             JwtService jwtService,
-            TokenRepository tokenRepository
+            TokenRepository tokenRepository,
+            UserInfoService userInfoService,
+            UserRepository userRepository
     ) {
         this.authenticationManager = authenticationManager;
         this.refreshTokenService = refreshTokenService;
         this.userService = userService;
         this.jwtService = jwtService;
         this.tokenRepository = tokenRepository;
+        this.userInfoService = userInfoService;
+        this.userRepository = userRepository;
     }
     JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
     EmailSender emailSender = new EmailSender(mailSender);
@@ -83,10 +93,17 @@ public class AuthenticationServiceImp implements AuthenticationService {
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
         return new AuthenticationResponse(jwt.getToken(), refreshToken.getToken(), user);
     }
+    @Transactional
     public InvalidateTokenResult logout(String jwt) {
         try {
-            this.tokenRepository.delete_by_token(jwt);
+            String jwtString = jwt.split(" ")[1];
 
+            Token token = this.tokenRepository.findByToken(jwtString);
+
+            User user = this.userRepository.findByToken_Token(token.getToken());
+
+            this.tokenRepository.deleteByUser(user);
+            this.refreshTokenService.deleteByUserId(user.getId());
             return new InvalidateTokenResult(true,"Session closed");
 
         } catch (Exception e) {
@@ -94,8 +111,11 @@ public class AuthenticationServiceImp implements AuthenticationService {
         }
     }
     @Override
+    @Transactional
     public UserDto register(User user) {
         User newUser = this.userService.newUser(user);
+        UserInfo newUserInfo = new UserInfo();
+        UserInfoDTO userInfoDto = this.userInfoService.createUserInfo(newUserInfo, user.getUsername());
         String recipientEmail = user.getEmail();
         String subject = "NoReply | New Account Created";
         String content = "<p>Hello,</p>"+ user.getFirstName() + user.getLastName() +
@@ -107,7 +127,7 @@ public class AuthenticationServiceImp implements AuthenticationService {
         } catch (MessagingException | UnsupportedEncodingException e) {
             System.out.println("Failed to send email. Error: " + e.getMessage());
         }
-        return new UserDto(newUser);
+        return new UserDto(newUser, userInfoDto);
     }
     @Override
     public boolean checkEditPermission(String token, pathUrlDto url) {

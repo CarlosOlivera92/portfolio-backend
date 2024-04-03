@@ -41,13 +41,13 @@ public class User implements UserDetails {
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime tokenCreationDate;
     @JsonIgnore
-    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Token token;
-    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private UserInfo userInfo;
     @Enumerated(EnumType.STRING)
     private Role role;
-
     @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

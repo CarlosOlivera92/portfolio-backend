@@ -29,18 +29,16 @@ public class UserInfoController {
     }
     @GetMapping("/{username}")
     @PreAuthorize("hasAuthority('ROLE_CUSTOMER') or hasAuthority('ROLE_ADMINISTRATOR')")
-    public ResponseEntity<UserInfo> getUserInfo(@PathVariable String username) {
+    public ResponseEntity<?> getUserInfo(@PathVariable String username) {
         try {
-            System.out.println(username);
             UserInfo userInfo = this.userInfoService.getUserInfo(username);
-            System.out.println(userInfo);
 
             return userInfo != null
                     ? ResponseEntity.ok(userInfo)  // Return 200 with user info if found
                     : ResponseEntity.notFound().build(); // Return 404 for user not found
         } catch (Exception e) {
             // Consider logging the exception for debugging purposes
-            return ResponseEntity.internalServerError().build(); // Return 500 for unexpected errors
+            return ResponseEntity.internalServerError().body(e.getMessage()); // Return 500 for unexpected errors
         }
     }
     @PostMapping("/{username}")
