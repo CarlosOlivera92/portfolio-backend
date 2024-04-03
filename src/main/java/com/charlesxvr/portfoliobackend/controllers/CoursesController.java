@@ -16,7 +16,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/courses")
-@CrossOrigin(origins = "http://localhost:5173/")
+@CrossOrigin(origins = "https://solo-resume-3c133.web.app/")
 public class CoursesController {
     private final CoursesService courseService;
     private final UserService userService;

@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/certifications")
-@CrossOrigin(origins = "http://localhost:5173/")
+@CrossOrigin(origins = "https://solo-resume-3c133.web.app/")
 public class CertificationsController {
     private final CertificationsService certificationsService;
     @Autowired

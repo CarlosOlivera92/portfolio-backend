@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("api/users/userinfo")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://solo-resume-3c133.web.app/")
 public class UserInfoController {
     private final UserInfoService userInfoService;
     @Autowired
