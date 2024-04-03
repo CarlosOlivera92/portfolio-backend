@@ -19,7 +19,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/educational")
-@CrossOrigin(origins = "http://localhost:5173/")
+@CrossOrigin(origins = "https://solo-resume-3c133.web.app/")
 public class EducationalController {
 
     private final EducationalService educationalService;

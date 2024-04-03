@@ -23,7 +23,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/auth")
-@CrossOrigin(origins = "http://localhost:5173/")
+@CrossOrigin(origins = "https://solo-resume-3c133.web.app/")
 
 public class AuthController {
     private final UserService userService;

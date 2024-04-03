@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/check-permission")
-@CrossOrigin(origins = "http://localhost:5173/")
+@CrossOrigin(origins = "https://solo-resume-3c133.web.app/")
 
 public class PermissionCheckController {
 
